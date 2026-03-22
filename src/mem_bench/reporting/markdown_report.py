@@ -32,6 +32,14 @@ def _metric_keys(samples: list[SampleResult]) -> list[str]:
     return sorted(keys)
 
 
+def _qa_accuracy_for(samples: list[SampleResult]) -> float | None:
+    """Compute QA accuracy for a list of samples, or None if no QA scores."""
+    scores = [s.qa_score for s in samples if s.qa_score is not None]
+    if not scores:
+        return None
+    return sum(1 for s in scores if s > 0.5) / len(scores)
+
+
 def save_markdown_report(run_result: RunResult, output_dir: str | Path) -> Path:
     """Generate a Markdown report and save it to *output_dir/report.md*.
 
@@ -50,8 +58,8 @@ def save_markdown_report(run_result: RunResult, output_dir: str | Path) -> Path:
     # -- Title ----------------------------------------------------------------
     lines.append(f"# Benchmark Report: {run_result.adapter_name}")
     lines.append("")
-    lines.append(f"| Field | Value |")
-    lines.append(f"|-------|-------|")
+    lines.append("| Field | Value |")
+    lines.append("|-------|-------|")
     lines.append(f"| Benchmark | {run_result.benchmark_name} |")
     lines.append(f"| Split | {run_result.split} |")
     lines.append(f"| Samples | {run_result.num_samples} |")
@@ -62,41 +70,66 @@ def save_markdown_report(run_result: RunResult, output_dir: str | Path) -> Path:
     # -- Metrics by question type ---------------------------------------------
     groups = _group_by_question_type(run_result.sample_results)
     all_keys = _metric_keys(run_result.sample_results)
+    has_qa = any(s.qa_score is not None for s in run_result.sample_results)
 
-    if all_keys:
+    if all_keys or has_qa:
         lines.append("## Metrics by Question Type")
         lines.append("")
 
-        header = "| Question Type | Count | " + " | ".join(all_keys) + " |"
-        sep = "|---|---:|" + "|".join(["---:" for _ in all_keys]) + "|"
+        column_keys = list(all_keys)
+        if has_qa:
+            column_keys.append("qa_accuracy")
+
+        header = "| Question Type | Count | " + " | ".join(column_keys) + " |"
+        sep = "|---|---:|" + "|".join(["---:" for _ in column_keys]) + "|"
         lines.append(header)
         lines.append(sep)
 
         for qtype in sorted(groups.keys()):
             samples = groups[qtype]
             cells = [qtype, str(len(samples))]
-            for key in all_keys:
-                vals = [s.retrieval_metrics.get(key, 0.0) for s in samples]
-                cells.append(f"{_mean(vals):.4f}")
+            for key in column_keys:
+                if key == "qa_accuracy":
+                    qa_acc = _qa_accuracy_for(samples)
+                    cells.append(f"{qa_acc:.4f}" if qa_acc is not None else "-")
+                else:
+                    vals = [s.retrieval_metrics.get(key, 0.0) for s in samples]
+                    cells.append(f"{_mean(vals):.4f}")
             lines.append("| " + " | ".join(cells) + " |")
 
         # Overall
         all_samples = run_result.sample_results
         cells = ["**Overall**", str(len(all_samples))]
-        for key in all_keys:
-            vals = [s.retrieval_metrics.get(key, 0.0) for s in all_samples]
-            cells.append(f"**{_mean(vals):.4f}**")
+        for key in column_keys:
+            if key == "qa_accuracy":
+                qa_acc = _qa_accuracy_for(all_samples)
+                cells.append(f"**{qa_acc:.4f}**" if qa_acc is not None else "-")
+            else:
+                vals = [s.retrieval_metrics.get(key, 0.0) for s in all_samples]
+                cells.append(f"**{_mean(vals):.4f}**")
         lines.append("| " + " | ".join(cells) + " |")
         lines.append("")
 
     # -- Aggregate metrics (flat) ---------------------------------------------
     agg = run_result.aggregate_metrics
-    if agg:
+    non_timing_keys = [k for k in sorted(agg.keys()) if not k.endswith("_seconds")]
+    if non_timing_keys:
         lines.append("## Aggregate Metrics")
         lines.append("")
         lines.append("| Metric | Value |")
         lines.append("|--------|------:|")
-        for key in sorted(agg.keys()):
+        for key in non_timing_keys:
+            lines.append(f"| {key} | {agg[key]:.4f} |")
+        lines.append("")
+
+    # -- Timing summary -------------------------------------------------------
+    timing_keys = [k for k in sorted(agg.keys()) if k.endswith("_seconds")]
+    if timing_keys:
+        lines.append("## Timing Summary")
+        lines.append("")
+        lines.append("| Metric | Value (s) |")
+        lines.append("|--------|----------:|")
+        for key in timing_keys:
             lines.append(f"| {key} | {agg[key]:.4f} |")
         lines.append("")
 

@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 from typing import Any, Sequence
 
 from mem_bench.core.adapter import BaseAdapter
@@ -169,7 +170,6 @@ class LettaAdapter(BaseAdapter):
             metadata = passage.get("metadata", {}) or {}
 
             # Extract document_id from embedded tag
-            import re
             doc_id_match = re.search(r"\[document_id:([^\]]+)\]", content)
             if doc_id_match:
                 doc_id = doc_id_match.group(1)

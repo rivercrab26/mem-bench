@@ -2,9 +2,9 @@
   "benchmark_name": "longmemeval",
   "split": "oracle",
   "adapter_name": "Mem0",
-  "num_samples": 5,
-  "num_failed": 5,
-  "total_seconds": 0.80645254207775,
+  "num_samples": 3,
+  "num_failed": 3,
+  "total_seconds": 1541.646218040958,
   "aggregate_metrics": {
     "mean_ingest_seconds": 0.0,
     "total_ingest_seconds": 0.0,
@@ -16,7 +16,7 @@
   "config": {
     "benchmark": "longmemeval",
     "split": "oracle",
-    "limit": 5,
+    "limit": 3,
     "output_dir": "test_results/mem0",
     "adapter": {
       "name": "mem0",

@@ -22,9 +22,12 @@ from mem_bench.core.types import (
     SampleResult,
     TimingInfo,
 )
+from mem_bench.evaluation.qa import format_recall_context, generate_answer
 from mem_bench.evaluation.retrieval import compute_retrieval_metrics
 
 logger = logging.getLogger(__name__)
+
+_MAX_RETRIES = 2
 
 
 @dataclass
@@ -61,8 +64,21 @@ class BenchmarkRunner:
         self.benchmark = benchmark
         self.config = config
 
-        # Derive a unique namespace per run to avoid cross-contamination.
-        self._namespace = f"mem_bench_{benchmark.name}_{config.split}"
+        # Judge initialization for QA evaluation.
+        self._judge = None
+        self._gen_model = None
+        if config.judge.enabled:
+            from mem_bench.core.judge import AnthropicJudge, OpenAIJudge
+
+            if config.judge.provider == "anthropic":
+                self._judge = AnthropicJudge(model=config.judge.model)
+            else:
+                self._judge = OpenAIJudge(
+                    model=config.judge.model,
+                    api_key_env=config.judge.api_key_env,
+                    base_url=config.judge.base_url,
+                )
+            self._gen_model = config.judge.model
 
     # -- Public API -----------------------------------------------------------
 
@@ -79,16 +95,43 @@ class BenchmarkRunner:
         adapter_name = getattr(self.adapter, "name", self.adapter.__class__.__name__)
 
         samples = list(self.benchmark)
+
+        # Warmup: run a dummy cleanup to warm up the adapter connection.
+        try:
+            self.adapter.cleanup(namespace="__mem_bench_warmup__")
+        except Exception:
+            logger.debug("Warmup cleanup raised; ignoring.", exc_info=True)
+
         for sample in tqdm(samples, desc=f"Running {adapter_name}", unit="sample"):
-            try:
-                result = self._run_sample(sample, top_k=top_k, k_values=k_values)
-                sample_results.append(result)
-            except Exception:
-                logger.warning(
-                    "Sample %s failed, skipping", sample.sample_id, exc_info=True
-                )
+            last_exc: Exception | None = None
+            succeeded = False
+
+            for attempt in range(_MAX_RETRIES + 1):
+                try:
+                    result = self._run_sample(sample, top_k=top_k, k_values=k_values)
+                    sample_results.append(result)
+                    succeeded = True
+                    break
+                except Exception as exc:
+                    last_exc = exc
+                    if attempt < _MAX_RETRIES:
+                        logger.warning(
+                            "Sample %s failed (attempt %d/%d), retrying",
+                            sample.sample_id,
+                            attempt + 1,
+                            _MAX_RETRIES + 1,
+                            exc_info=True,
+                        )
+                    else:
+                        logger.warning(
+                            "Sample %s failed after %d attempts, skipping",
+                            sample.sample_id,
+                            _MAX_RETRIES + 1,
+                            exc_info=True,
+                        )
+
+            if not succeeded:
                 num_failed += 1
-                # Record a minimal result so the failure is visible.
                 sample_results.append(
                     SampleResult(
                         sample_id=sample.sample_id,
@@ -126,14 +169,17 @@ class BenchmarkRunner:
         """Run a single sample: cleanup -> ingest -> recall -> evaluate -> cleanup."""
         timing = TimingInfo()
 
+        # Per-sample namespace for isolation.
+        namespace = f"mb_{sample.sample_id}"
+
         # 1. Pre-cleanup
         t0 = time.perf_counter()
-        self.adapter.cleanup(namespace=self._namespace)
+        self.adapter.cleanup(namespace=namespace)
         timing.cleanup_seconds = time.perf_counter() - t0
 
         # 2. Ingest
         t0 = time.perf_counter()
-        self.adapter.ingest(sample.ingest_items, namespace=self._namespace)
+        self.adapter.ingest(sample.ingest_items, namespace=namespace)
         timing.ingest_seconds = time.perf_counter() - t0
 
         # 3. Recall
@@ -144,7 +190,7 @@ class BenchmarkRunner:
         )
         t0 = time.perf_counter()
         recall_results: list[RecallResult] = self.adapter.recall(
-            query, namespace=self._namespace
+            query, namespace=namespace
         )
         timing.recall_seconds = time.perf_counter() - t0
 
@@ -153,9 +199,32 @@ class BenchmarkRunner:
             recall_results, sample.ground_truth_doc_ids, k_values=k_values
         )
 
+        # 4.5 QA generation + judge evaluation
+        hypothesis = ""
+        qa_score: float | None = None
+
+        if self.config.judge.enabled and self._judge is not None:
+            context = format_recall_context(recall_results)
+            question_date = sample.metadata.get("question_date", "")
+            hypothesis = generate_answer(
+                question=sample.question,
+                context=context,
+                question_date=question_date,
+                model=self._gen_model or self.config.judge.model,
+                base_url=self.config.judge.base_url,
+            )
+            is_correct = self._judge.evaluate(
+                question=sample.question,
+                reference=sample.reference_answer,
+                hypothesis=hypothesis,
+                question_type=sample.question_type,
+                is_abstention=sample.sample_id.endswith("_abs"),
+            )
+            qa_score = 1.0 if is_correct else 0.0
+
         # 5. Post-cleanup
         t0 = time.perf_counter()
-        self.adapter.cleanup(namespace=self._namespace)
+        self.adapter.cleanup(namespace=namespace)
         timing.cleanup_seconds += time.perf_counter() - t0
 
         return SampleResult(
@@ -163,6 +232,8 @@ class BenchmarkRunner:
             question_type=sample.question_type,
             recall_results=recall_results,
             retrieval_metrics=retrieval_metrics,
+            hypothesis=hypothesis,
+            qa_score=qa_score,
             timing=timing,
         )
 
@@ -190,6 +261,11 @@ class BenchmarkRunner:
         aggregate: dict[str, float] = {}
         for key, vals in sorted(metric_accum.items()):
             aggregate[key] = sum(vals) / len(vals) if vals else 0.0
+
+        # QA score aggregation
+        qa_scores = [r.qa_score for r in results if r.qa_score is not None]
+        if qa_scores:
+            aggregate["qa_accuracy"] = sum(1 for s in qa_scores if s > 0.5) / len(qa_scores)
 
         # Timing aggregates
         for key, vals in timing_accum.items():

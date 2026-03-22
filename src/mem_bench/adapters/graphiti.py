@@ -61,11 +61,17 @@ def _run_async(coro: Any) -> Any:
 class GraphitiAdapter(BaseAdapter):
     """Adapter for the Graphiti knowledge-graph memory system.
 
+    **Requires OpenAI API access.** Graphiti uses OpenAI models internally for
+    entity extraction and graph construction. Ensure ``OPENAI_API_KEY`` is set
+    in your environment or pass it via the ``openai_api_key`` parameter.
+
     Args:
         uri: Neo4j connection URI.  Defaults to ``NEO4J_URI`` env var or
              ``bolt://localhost:7687``.
         user: Neo4j username.  Defaults to ``NEO4J_USER`` or ``neo4j``.
         password: Neo4j password.  Defaults to ``NEO4J_PASSWORD`` or ``password``.
+        openai_api_key: OpenAI API key.  If provided, it will be set as the
+            ``OPENAI_API_KEY`` environment variable for this process.
     """
 
     def __init__(
@@ -73,8 +79,13 @@ class GraphitiAdapter(BaseAdapter):
         uri: str | None = None,
         user: str | None = None,
         password: str | None = None,
+        openai_api_key: str | None = None,
         **kwargs: Any,
     ) -> None:
+        # Set OpenAI API key in env if provided explicitly.
+        if openai_api_key:
+            os.environ["OPENAI_API_KEY"] = openai_api_key
+
         self._uri = uri or os.environ.get("NEO4J_URI", "bolt://localhost:7687")
         self._user = user or os.environ.get("NEO4J_USER", "neo4j")
         self._password = password or os.environ.get("NEO4J_PASSWORD", "password")
@@ -107,6 +118,12 @@ class GraphitiAdapter(BaseAdapter):
     # ------------------------------------------------------------------
 
     def ingest(self, items: Sequence[IngestItem], *, namespace: str = "default") -> None:
+        if not os.environ.get("OPENAI_API_KEY"):
+            raise RuntimeError(
+                "Graphiti requires the OpenAI API. Set the OPENAI_API_KEY "
+                "environment variable or pass openai_api_key to the adapter."
+            )
+
         graphiti = self._get_graphiti()
 
         async def _ingest() -> None:

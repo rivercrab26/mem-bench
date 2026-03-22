@@ -28,6 +28,12 @@ class Mem0Adapter(BaseAdapter):
         base_url: Optional custom base URL for the Mem0 cloud API.
         org_id: Mem0 cloud organization ID.
         project_id: Mem0 cloud project ID.
+        embedder_provider: Embedding provider for OSS mode (default: ``"ollama"``).
+        embedder_model: Embedding model name (default: ``"nomic-embed-text"``).
+        llm_provider: LLM provider for OSS mode (default: ``"ollama"``).
+        llm_model: LLM model name for OSS mode. Users should set this to a
+            model available on their provider (e.g. ``"qwen2.5:3b"`` for Ollama,
+            ``"gpt-4o-mini"`` for OpenAI).  Defaults to ``"qwen2.5:3b"``.
     """
 
     def __init__(
@@ -39,7 +45,7 @@ class Mem0Adapter(BaseAdapter):
         embedder_provider: str = "ollama",
         embedder_model: str = "nomic-embed-text",
         llm_provider: str = "ollama",
-        llm_model: str = "qwen3.5:latest",
+        llm_model: str = "qwen2.5:3b",
         **kwargs: Any,
     ) -> None:
         self._api_key = api_key or os.environ.get("MEM0_API_KEY")
@@ -88,7 +94,7 @@ class Mem0Adapter(BaseAdapter):
                         },
                     },
                 }
-                self._client = Memory.from_config(config)
+                self._client = Memory.from_config(config, version="v1.1")
         except ImportError as exc:
             raise ImportError(
                 "mem0ai is not installed.  Install it with:\n"
@@ -117,6 +123,17 @@ class Mem0Adapter(BaseAdapter):
                     user_id=namespace,
                     metadata=metadata,
                 )
+            except ValueError as exc:
+                if "dimension" in str(exc).lower() or "mismatch" in str(exc).lower():
+                    logger.error(
+                        "Vector dimension mismatch during ingest (document_id=%s). "
+                        "This typically happens when Mem0 OSS creates a Qdrant "
+                        "migration collection with OpenAI 1536-dim vectors that "
+                        "conflicts with your embedder's dimensions. "
+                        "To fix, clear local Qdrant data: rm -rf ~/.mem0/ and retry.",
+                        item.document_id,
+                    )
+                raise
             except Exception:
                 logger.exception("Mem0 ingest failed for document_id=%s", item.document_id)
                 raise
@@ -167,6 +184,10 @@ class Mem0Adapter(BaseAdapter):
             m.delete_all(user_id=namespace)
         except Exception:
             logger.warning("Mem0 cleanup failed for namespace=%s", namespace, exc_info=True)
+        finally:
+            # Reset the Memory instance so it gets re-initialized fresh for
+            # the next namespace, avoiding stale collection state.
+            self._client = None
 
     # ------------------------------------------------------------------
     # Metadata
