@@ -1,0 +1,42 @@
+Adapter:   hindsight
+Benchmark: longmemeval
+Split:     oracle
+Limit:     20
+
+/Users/rayyao/source/project/mem-bench/.venv/lib/python3.11/site-packages/requests/__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.2.0)/charset_normalizer (3.4.6) doesn't match a supported version!
+  warnings.warn(
+13:27:46 INFO     mem_bench.benchmarks.longmemeval: Loading LongMemEval split=oracle from /Users/rayyao/.cache/mem_bench/xiaowu0162--longmemeval-cleaned/longmemeval_oracle.json
+13:27:46 INFO     mem_bench.benchmarks.longmemeval: Loaded 20 samples
+Loaded 20 samples.
+Running Hindsight:   0%|          | 0/20 [00:00<?, ?sample/s]Running Hindsight:   5%|▌         | 1/20 [03:44<1:11:02, 224.37s/sample]Running Hindsight:  10%|█         | 2/20 [04:21<34:15, 114.19s/sample]  Running Hindsight:  15%|█▌        | 3/20 [05:11<24:03, 84.93s/sample] Running Hindsight:  20%|██        | 4/20 [05:29<15:36, 58.56s/sample]Running Hindsight:  25%|██▌       | 5/20 [05:50<11:14, 44.96s/sample]Running Hindsight:  30%|███       | 6/20 [06:18<09:09, 39.24s/sample]Running Hindsight:  35%|███▌      | 7/20 [12:20<31:21, 144.74s/sample]Running Hindsight:  40%|████      | 8/20 [14:13<26:55, 134.62s/sample]Running Hindsight:  45%|████▌     | 9/20 [15:51<22:34, 123.18s/sample]Running Hindsight:  50%|█████     | 10/20 [16:37<16:34, 99.47s/sample]Running Hindsight:  55%|█████▌    | 11/20 [18:56<16:42, 111.41s/sample]Running Hindsight:  60%|██████    | 12/20 [21:00<15:22, 115.27s/sample]Running Hindsight:  65%|██████▌   | 13/20 [25:26<18:45, 160.85s/sample]Running Hindsight:  70%|███████   | 14/20 [26:14<12:41, 126.85s/sample]Running Hindsight:  75%|███████▌  | 15/20 [27:09<08:45, 105.07s/sample]Running Hindsight:  80%|████████  | 16/20 [30:23<08:47, 131.82s/sample]Running Hindsight:  85%|████████▌ | 17/20 [31:09<05:18, 106.06s/sample]Running Hindsight:  90%|█████████ | 18/20 [31:56<02:56, 88.32s/sample] Running Hindsight:  95%|█████████▌| 19/20 [32:46<01:16, 76.88s/sample]Running Hindsight: 100%|██████████| 20/20 [33:30<00:00, 66.92s/sample]Running Hindsight: 100%|██████████| 20/20 [33:30<00:00, 100.51s/sample]
+
+────────────────────── Results: Hindsight on longmemeval ───────────────────────
+  Split: oracle  |  Samples: 20  |  Failed: 0  |  Time: 2010.1s
+
+                            Metrics by Question Type                            
+┏━━━━┳━━━━┳━━━━┳━━━━┳━━━━┳━━━━┳━━━━┳━━━━━┳━━━━┳━━━━━┳━━━━┳━━━━━┳━━━━┳━━━━━┳━━━━┓
+┃ Q… ┃    ┃    ┃    ┃    ┃    ┃    ┃     ┃    ┃     ┃    ┃     ┃    ┃     ┃    ┃
+┃ T… ┃ C… ┃ m… ┃ n… ┃ n… ┃ n… ┃ n… ┃ re… ┃ r… ┃ re… ┃ r… ┃ re… ┃ r… ┃ re… ┃ r… ┃
+┡━━━━╇━━━━╇━━━━╇━━━━╇━━━━╇━━━━╇━━━━╇━━━━━╇━━━━╇━━━━━╇━━━━╇━━━━━╇━━━━╇━━━━━╇━━━━┩
+│ t… │ 20 │ 1… │ 1… │ 1… │ 1… │ 1… │ 0.… │ 1… │ 0.… │ 0… │ 1.… │ 1… │ 1.… │ 1… │
+├────┼────┼────┼────┼────┼────┼────┼─────┼────┼─────┼────┼─────┼────┼─────┼────┤
+│ O… │ 20 │ 1… │ 1… │ 1… │ 1… │ 1… │ 0.… │ 1… │ 0.… │ 0… │ 1.… │ 1… │ 1.… │ 1… │
+└────┴────┴────┴────┴────┴────┴────┴─────┴────┴─────┴────┴─────┴────┴─────┴────┘
+
+           Timing Summary            
+┏━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━┓
+┃ Metric                ┃ Value (s) ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━┩
+│ mean_cleanup_seconds  │    0.1115 │
+│ mean_ingest_seconds   │   63.7836 │
+│ mean_recall_seconds   │   36.6050 │
+│ total_cleanup_seconds │    2.2307 │
+│ total_ingest_seconds  │ 1275.6724 │
+│ total_recall_seconds  │  732.1002 │
+└───────────────────────┴───────────┘
+
+14:01:16 INFO     mem_bench.reporting.json_report: Wrote 20 sample results to test_results/hindsight/results.jsonl
+14:01:16 INFO     mem_bench.reporting.json_report: Wrote summary to test_results/hindsight/summary.json
+
+Completed in 2010.1s  (20 samples, 0 failed)
+Results saved to test_results/hindsight
