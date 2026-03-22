@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+from mem_bench.benchmarks.halumem import HaluMemBenchmark
+from mem_bench.benchmarks.locomo import LoCoMoBenchmark
 from mem_bench.benchmarks.longmemeval import LongMemEvalBenchmark
 from mem_bench.core.benchmark import Benchmark
 
 _BENCHMARKS: dict[str, type] = {
     "longmemeval": LongMemEvalBenchmark,
+    "locomo": LoCoMoBenchmark,
+    "halumem": HaluMemBenchmark,
 }
 
 
