@@ -147,9 +147,7 @@ class GraphitiAdapter(BaseAdapter):
 
         _run_async(_ingest())
 
-    def recall(
-        self, query: RecallQuery, *, namespace: str = "default"
-    ) -> list[RecallResult]:
+    def recall(self, query: RecallQuery, *, namespace: str = "default") -> list[RecallResult]:
         graphiti = self._get_graphiti()
 
         async def _recall() -> list[RecallResult]:
@@ -204,9 +202,7 @@ class GraphitiAdapter(BaseAdapter):
                         {"gid": namespace},
                     )
             except Exception:
-                logger.warning(
-                    "Graphiti cleanup failed for namespace=%s", namespace, exc_info=True
-                )
+                logger.warning("Graphiti cleanup failed for namespace=%s", namespace, exc_info=True)
 
         _run_async(_cleanup())
 

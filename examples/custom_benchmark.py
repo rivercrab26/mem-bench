@@ -27,7 +27,9 @@ class MyBenchmark:
                 reference_answer="blue",
                 question_type="single-hop",
                 ingest_items=[
-                    IngestItem(content="Alice told me her favorite color is blue.", document_id="s1"),
+                    IngestItem(
+                        content="Alice told me her favorite color is blue.", document_id="s1"
+                    ),
                     IngestItem(content="Bob likes hiking in the mountains.", document_id="s2"),
                 ],
                 ground_truth_doc_ids=["s1"],
@@ -38,7 +40,9 @@ class MyBenchmark:
                 reference_answer="mountains",
                 question_type="single-hop",
                 ingest_items=[
-                    IngestItem(content="Alice told me her favorite color is blue.", document_id="s1"),
+                    IngestItem(
+                        content="Alice told me her favorite color is blue.", document_id="s1"
+                    ),
                     IngestItem(content="Bob likes hiking in the mountains.", document_id="s2"),
                 ],
                 ground_truth_doc_ids=["s2"],

@@ -5,6 +5,7 @@ No need to inherit from any base class -- just implement the interface.
 """
 
 from __future__ import annotations
+
 from typing import Sequence
 
 # These imports are optional -- your adapter works without them
@@ -56,4 +57,5 @@ class MyMemoryAdapter:
 
 
 # Usage:
-#   mem-bench run --adapter examples.custom_adapter:MyMemoryAdapter --benchmark longmemeval --split oracle --limit 5
+#   mem-bench run --adapter examples.custom_adapter:MyMemoryAdapter \
+#     --benchmark longmemeval --split oracle --limit 5

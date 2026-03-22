@@ -45,9 +45,7 @@ class MemoryAdapter(Protocol):
 class AsyncMemoryAdapter(Protocol):
     """Async variant for memory systems with async APIs."""
 
-    async def ingest(
-        self, items: Sequence[IngestItem], *, namespace: str = "default"
-    ) -> None: ...
+    async def ingest(self, items: Sequence[IngestItem], *, namespace: str = "default") -> None: ...
 
     async def recall(
         self, query: RecallQuery, *, namespace: str = "default"

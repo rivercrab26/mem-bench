@@ -10,7 +10,7 @@ import click
 
 from mem_bench.adapters import get_adapter
 from mem_bench.cli._benchmarks import get_benchmark
-from mem_bench.core.config import AdapterConfig, RunConfig, load_config
+from mem_bench.core.config import AdapterConfig, load_config
 from mem_bench.core.runner import BenchmarkRunner
 from mem_bench.reporting.console import print_results
 from mem_bench.reporting.json_report import save_json_report
@@ -149,9 +149,15 @@ def run(
         save_json_report(result, out_dir)
     if "markdown" in formats:
         save_markdown_report(result, out_dir)
+    if "html" in formats:
+        from mem_bench.reporting.html_report import save_html_report
+
+        save_html_report(result, out_dir)
 
     click.echo()
-    click.echo(f"Completed in {result.total_seconds:.1f}s  "
-               f"({result.num_samples} samples, {result.num_failed} failed)")
+    click.echo(
+        f"Completed in {result.total_seconds:.1f}s  "
+        f"({result.num_samples} samples, {result.num_failed} failed)"
+    )
     if out_dir.exists():
         click.echo(f"Results saved to {out_dir}")

@@ -37,9 +37,7 @@ def _parse_longmemeval_date(date_str: str) -> str | None:
 
     Returns ``None`` for time-only strings or unparseable values.
     """
-    m = re.match(
-        r"(\d{4})/(\d{2})/(\d{2})\s+\(\w+\)\s+(\d{2}):(\d{2})", date_str
-    )
+    m = re.match(r"(\d{4})/(\d{2})/(\d{2})\s+\(\w+\)\s+(\d{2}):(\d{2})", date_str)
     if m:
         return f"{m.group(1)}-{m.group(2)}-{m.group(3)}T{m.group(4)}:{m.group(5)}:00"
     return None
@@ -86,14 +84,10 @@ class LongMemEvalBenchmark:
             limit: Maximum number of samples to load. ``None`` or ``0`` means all.
         """
         if split not in _SPLIT_FILES:
-            raise ValueError(
-                f"Unknown split {split!r}. Choose from: {list(_SPLIT_FILES)}"
-            )
+            raise ValueError(f"Unknown split {split!r}. Choose from: {list(_SPLIT_FILES)}")
 
         filename = _SPLIT_FILES[split]
-        path = download_benchmark(
-            HF_REPO_ID, filename, cache_dir=self._cache_dir
-        )
+        path = download_benchmark(HF_REPO_ID, filename, cache_dir=self._cache_dir)
 
         logger.info("Loading LongMemEval split=%s from %s", split, path)
         with open(path, "r", encoding="utf-8") as f:

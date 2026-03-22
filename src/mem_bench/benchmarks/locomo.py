@@ -106,9 +106,18 @@ def _parse_locomo_date(date_str: str | None) -> str | None:
                 hour = 0
 
             month_map = {
-                "january": 1, "february": 2, "march": 3, "april": 4,
-                "may": 5, "june": 6, "july": 7, "august": 8,
-                "september": 9, "october": 10, "november": 11, "december": 12,
+                "january": 1,
+                "february": 2,
+                "march": 3,
+                "april": 4,
+                "may": 5,
+                "june": 6,
+                "july": 7,
+                "august": 8,
+                "september": 9,
+                "october": 10,
+                "november": 11,
+                "december": 12,
             }
             month = month_map.get(month_str.lower())
             if month:
@@ -151,13 +160,9 @@ class LoCoMoBenchmark:
                 ``None`` or ``0`` means all.
         """
         if split != "test":
-            raise ValueError(
-                f"Unknown split {split!r}. LoCoMo only supports 'test'."
-            )
+            raise ValueError(f"Unknown split {split!r}. LoCoMo only supports 'test'.")
 
-        path = download_benchmark(
-            HF_REPO_ID, _FILENAME, cache_dir=self._cache_dir
-        )
+        path = download_benchmark(HF_REPO_ID, _FILENAME, cache_dir=self._cache_dir)
 
         logger.info("Loading LoCoMo from %s", path)
         with open(path, "r", encoding="utf-8") as f:
@@ -238,9 +243,7 @@ class LoCoMoBenchmark:
             category = qa.get("category", 0)
             evidence = qa.get("evidence", [])
 
-            question_type = _CATEGORY_LABELS.get(
-                int(category) if category else 0, "unknown"
-            )
+            question_type = _CATEGORY_LABELS.get(int(category) if category else 0, "unknown")
 
             # Resolve evidence dia_ids to ground truth doc IDs.
             ground_truth_doc_ids: list[str] = []

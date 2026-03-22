@@ -23,8 +23,7 @@ try:
     import requests  # noqa: F401
 except ImportError as _exc:
     raise ImportError(
-        "The 'requests' library is required for the Hindsight adapter.\n"
-        "  pip install requests"
+        "The 'requests' library is required for the Hindsight adapter.\n  pip install requests"
     ) from _exc
 
 # Default batch size for ingestion (avoids timeouts on large payloads).
@@ -33,7 +32,7 @@ _INGEST_BATCH_SIZE = 10
 # Generous timeouts – Hindsight can be slow during embedding / fact extraction.
 _INGEST_TIMEOUT = 600  # 10 min per batch
 _RECALL_TIMEOUT = 300  # 5 min
-_MGMT_TIMEOUT = 30     # bank create/delete
+_MGMT_TIMEOUT = 30  # bank create/delete
 
 
 def _parse_longmemeval_date(date_str: str) -> str | None:
@@ -43,9 +42,7 @@ def _parse_longmemeval_date(date_str: str) -> str | None:
 
     Returns ``None`` for time-only strings or unparseable input.
     """
-    m = re.match(
-        r"(\d{4})/(\d{2})/(\d{2})\s+\(\w+\)\s+(\d{2}):(\d{2})", date_str
-    )
+    m = re.match(r"(\d{4})/(\d{2})/(\d{2})\s+\(\w+\)\s+(\d{2}):(\d{2})", date_str)
     if m:
         return f"{m.group(1)}-{m.group(2)}-{m.group(3)}T{m.group(4)}:{m.group(5)}:00"
     return None
@@ -99,8 +96,7 @@ class HindsightAdapter(BaseAdapter):
                 )
         except requests.exceptions.ConnectionError:
             raise ConnectionError(
-                f"Cannot connect to Hindsight at {self._base_url}. "
-                "Is the server running?"
+                f"Cannot connect to Hindsight at {self._base_url}. Is the server running?"
             )
 
     def _delete_bank(self, namespace: str) -> None:
@@ -168,15 +164,12 @@ class HindsightAdapter(BaseAdapter):
                 logger.warning("Hindsight ingest batch %d: timeout, continuing...", i)
             except requests.exceptions.ConnectionError:
                 raise ConnectionError(
-                    f"Cannot connect to Hindsight at {self._base_url}. "
-                    "Is the server running?"
+                    f"Cannot connect to Hindsight at {self._base_url}. Is the server running?"
                 )
             except Exception:
                 logger.exception("Hindsight ingest batch %d failed", i)
 
-    def recall(
-        self, query: RecallQuery, *, namespace: str = "default"
-    ) -> list[RecallResult]:
+    def recall(self, query: RecallQuery, *, namespace: str = "default") -> list[RecallResult]:
         try:
             resp = requests.post(
                 f"{self._bank_url(namespace)}/memories/recall",
@@ -192,14 +185,11 @@ class HindsightAdapter(BaseAdapter):
             return []
         except requests.exceptions.ConnectionError:
             raise ConnectionError(
-                f"Cannot connect to Hindsight at {self._base_url}. "
-                "Is the server running?"
+                f"Cannot connect to Hindsight at {self._base_url}. Is the server running?"
             )
 
         if resp.status_code != 200:
-            logger.warning(
-                "Hindsight recall: %s %s", resp.status_code, resp.text[:200]
-            )
+            logger.warning("Hindsight recall: %s %s", resp.status_code, resp.text[:200])
             return []
 
         data = resp.json()

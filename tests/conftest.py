@@ -16,7 +16,9 @@ def sample_items() -> list[IngestItem]:
         IngestItem(content="Python is a popular programming language.", document_id="doc_2"),
         IngestItem(content="The Great Wall of China is visible from space.", document_id="doc_3"),
         IngestItem(content="Water boils at 100 degrees Celsius.", document_id="doc_4"),
-        IngestItem(content="Albert Einstein developed the theory of relativity.", document_id="doc_5"),
+        IngestItem(
+            content="Albert Einstein developed the theory of relativity.", document_id="doc_5"
+        ),
     ]
 
 

@@ -138,9 +138,7 @@ class Mem0Adapter(BaseAdapter):
                 logger.exception("Mem0 ingest failed for document_id=%s", item.document_id)
                 raise
 
-    def recall(
-        self, query: RecallQuery, *, namespace: str = "default"
-    ) -> list[RecallResult]:
+    def recall(self, query: RecallQuery, *, namespace: str = "default") -> list[RecallResult]:
         m = self._get_client()
 
         try:

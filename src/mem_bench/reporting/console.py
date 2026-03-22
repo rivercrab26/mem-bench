@@ -11,7 +11,6 @@ from rich.table import Table
 from mem_bench.core.runner import RunResult
 from mem_bench.core.types import SampleResult
 
-
 # Key metrics to display (avoids truncation from too many columns).
 _DISPLAY_METRICS = [
     "recall_any@1",
@@ -134,6 +133,9 @@ def print_comparison(summaries: list[dict[str, Any]]) -> None:
 
     Each summary dict is expected to have at minimum:
     ``adapter_name``, ``benchmark_name``, ``split``, ``aggregate_metrics``.
+
+    Skips timing metrics to focus on quality metrics. Highlights best value
+    per metric in bold green and shows percentage difference from best.
     """
     console = Console()
     console.print()
@@ -142,17 +144,14 @@ def print_comparison(summaries: list[dict[str, Any]]) -> None:
         console.print("[yellow]No results to compare.[/yellow]")
         return
 
-    # Collect all metric keys across all summaries.
+    # Collect quality metric keys (skip timing).
     all_keys: set[str] = set()
     for s in summaries:
         all_keys.update(s.get("aggregate_metrics", {}).keys())
-    metric_keys = sorted(all_keys)
+    metric_keys = sorted(k for k in all_keys if not k.endswith("_seconds"))
 
     # Build column labels from adapter names.
-    labels = [
-        f"{s.get('adapter_name', '?')} ({s.get('split', '?')})"
-        for s in summaries
-    ]
+    labels = [f"{s.get('adapter_name', '?')} ({s.get('split', '?')})" for s in summaries]
 
     table = Table(title="Comparison", show_lines=True)
     table.add_column("Metric", style="bold")
@@ -162,21 +161,70 @@ def print_comparison(summaries: list[dict[str, Any]]) -> None:
     for key in metric_keys:
         row: list[str] = [key]
         values = [s.get("aggregate_metrics", {}).get(key) for s in summaries]
-        # Highlight the best value (highest for scores, lowest for *_seconds).
-        is_timing = key.endswith("_seconds")
         numeric = [v for v in values if v is not None]
         best: float | None = None
         if numeric:
-            best = min(numeric) if is_timing else max(numeric)
+            best = max(numeric)
 
         for v in values:
             if v is None:
                 row.append("-")
-            elif v == best:
+            elif best is not None and v == best:
                 row.append(f"[bold green]{v:.4f}[/bold green]")
+            elif best is not None and best != 0:
+                pct_diff = ((v - best) / abs(best)) * 100
+                row.append(f"{v:.4f} ({pct_diff:+.1f}%)")
             else:
                 row.append(f"{v:.4f}")
         table.add_row(*row)
 
     console.print(table)
     console.print()
+
+
+def format_comparison_markdown(summaries: list[dict[str, Any]]) -> str:
+    """Format a side-by-side comparison as a Markdown table.
+
+    Skips timing metrics. Highlights best value per metric in bold and
+    shows percentage difference from best.
+    """
+    if not summaries:
+        return "*No results to compare.*\n"
+
+    # Collect quality metric keys (skip timing).
+    all_keys: set[str] = set()
+    for s in summaries:
+        all_keys.update(s.get("aggregate_metrics", {}).keys())
+    metric_keys = sorted(k for k in all_keys if not k.endswith("_seconds"))
+
+    labels = [f"{s.get('adapter_name', '?')} ({s.get('split', '?')})" for s in summaries]
+
+    lines: list[str] = []
+    # Header
+    header = "| Metric | " + " | ".join(labels) + " |"
+    sep = "|---|" + "|".join(["---:" for _ in labels]) + "|"
+    lines.append(header)
+    lines.append(sep)
+
+    for key in metric_keys:
+        values = [s.get("aggregate_metrics", {}).get(key) for s in summaries]
+        numeric = [v for v in values if v is not None]
+        best: float | None = None
+        if numeric:
+            best = max(numeric)
+
+        cells: list[str] = [key]
+        for v in values:
+            if v is None:
+                cells.append("-")
+            elif best is not None and v == best:
+                cells.append(f"**{v:.4f}**")
+            elif best is not None and best != 0:
+                pct_diff = ((v - best) / abs(best)) * 100
+                cells.append(f"{v:.4f} ({pct_diff:+.1f}%)")
+            else:
+                cells.append(f"{v:.4f}")
+        lines.append("| " + " | ".join(cells) + " |")
+
+    lines.append("")
+    return "\n".join(lines)

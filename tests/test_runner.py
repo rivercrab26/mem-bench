@@ -169,7 +169,7 @@ class TestFailedSamples:
             def ingest(self, items, *, namespace="default"):
                 self._call_count += 1
                 if self._call_count <= 3:
-                    # Fail for first sample (warmup cleanup + pre-cleanup + ingest = first 3 calls concern sample 1 ingest)
+                    # Fail for first sample's calls (warmup + pre-cleanup + ingest)
                     raise RuntimeError("Simulated failure")
 
             def recall(self, query, *, namespace="default"):

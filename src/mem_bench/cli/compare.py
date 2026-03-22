@@ -8,12 +8,20 @@ from pathlib import Path
 
 import click
 
-from mem_bench.reporting.console import print_comparison
+from mem_bench.reporting.console import format_comparison_markdown, print_comparison
 
 
 @click.command()
 @click.argument("directories", nargs=-1, required=True, type=click.Path(exists=True))
-def compare(directories: tuple[str, ...]) -> None:
+@click.option(
+    "--format",
+    "-f",
+    "output_format",
+    type=click.Choice(["console", "markdown"], case_sensitive=False),
+    default="console",
+    help="Output format: console (rich table) or markdown.",
+)
+def compare(directories: tuple[str, ...], output_format: str) -> None:
     """Compare results from multiple benchmark runs.
 
     Pass two or more result directories containing summary.json files.
@@ -31,4 +39,7 @@ def compare(directories: tuple[str, ...]) -> None:
         with open(summary_file, "r", encoding="utf-8") as f:
             summaries.append(json.load(f))
 
-    print_comparison(summaries)
+    if output_format == "markdown":
+        click.echo(format_comparison_markdown(summaries))
+    else:
+        print_comparison(summaries)

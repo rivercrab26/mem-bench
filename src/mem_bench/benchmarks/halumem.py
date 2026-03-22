@@ -93,14 +93,10 @@ class HaluMemBenchmark:
                 ``None`` or ``0`` means all.
         """
         if split not in _SPLIT_FILES:
-            raise ValueError(
-                f"Unknown split {split!r}. Choose from: {list(_SPLIT_FILES)}"
-            )
+            raise ValueError(f"Unknown split {split!r}. Choose from: {list(_SPLIT_FILES)}")
 
         filename = _SPLIT_FILES[split]
-        path = download_benchmark(
-            HF_REPO_ID, filename, cache_dir=self._cache_dir
-        )
+        path = download_benchmark(HF_REPO_ID, filename, cache_dir=self._cache_dir)
 
         logger.info("Loading HaluMem split=%s from %s", split, path)
 
@@ -121,9 +117,7 @@ class HaluMemBenchmark:
             samples = samples[:limit]
 
         self._samples = samples
-        logger.info(
-            "Loaded %d QA samples from %d users", len(self._samples), len(users)
-        )
+        logger.info("Loaded %d QA samples from %d users", len(self._samples), len(users))
 
     def __iter__(self) -> Iterator[BenchmarkSample]:
         """Yield ``BenchmarkSample`` objects for the loaded data."""
@@ -166,12 +160,14 @@ class HaluMemBenchmark:
             # Collect memory point metadata for this session.
             mp_summary: list[dict[str, Any]] = []
             for mp in memory_points:
-                mp_summary.append({
-                    "index": mp.get("index"),
-                    "memory_type": mp.get("memory_type", ""),
-                    "memory_source": mp.get("memory_source", ""),
-                    "is_update": mp.get("is_update", False),
-                })
+                mp_summary.append(
+                    {
+                        "index": mp.get("index"),
+                        "memory_type": mp.get("memory_type", ""),
+                        "memory_source": mp.get("memory_source", ""),
+                        "is_update": mp.get("is_update", False),
+                    }
+                )
 
             ingest_items.append(
                 IngestItem(
@@ -215,10 +211,12 @@ class HaluMemBenchmark:
             # Build evidence metadata.
             evidence_meta: list[dict[str, str]] = []
             for ev in evidence:
-                evidence_meta.append({
-                    "memory_content": ev.get("memory_content", ""),
-                    "memory_type": ev.get("memory_type", ""),
-                })
+                evidence_meta.append(
+                    {
+                        "memory_content": ev.get("memory_content", ""),
+                        "memory_type": ev.get("memory_type", ""),
+                    }
+                )
 
             results.append(
                 BenchmarkSample(

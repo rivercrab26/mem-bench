@@ -24,8 +24,7 @@ try:
     import requests  # noqa: F401 – availability check
 except ImportError as _exc:
     raise ImportError(
-        "The 'requests' library is required for the Letta adapter.\n"
-        "  pip install requests"
+        "The 'requests' library is required for the Letta adapter.\n  pip install requests"
     ) from _exc
 
 
@@ -134,14 +133,10 @@ class LettaAdapter(BaseAdapter):
                 )
                 resp.raise_for_status()
             except Exception:
-                logger.exception(
-                    "Letta ingest failed for document_id=%s", item.document_id
-                )
+                logger.exception("Letta ingest failed for document_id=%s", item.document_id)
                 raise
 
-    def recall(
-        self, query: RecallQuery, *, namespace: str = "default"
-    ) -> list[RecallResult]:
+    def recall(self, query: RecallQuery, *, namespace: str = "default") -> list[RecallResult]:
         if namespace not in self._agents:
             # No agent has been created yet for this namespace
             return []
@@ -211,9 +206,7 @@ class LettaAdapter(BaseAdapter):
                     resp.text[:200],
                 )
         except Exception:
-            logger.warning(
-                "Letta cleanup failed for namespace=%s", namespace, exc_info=True
-            )
+            logger.warning("Letta cleanup failed for namespace=%s", namespace, exc_info=True)
 
     # ------------------------------------------------------------------
     # Metadata

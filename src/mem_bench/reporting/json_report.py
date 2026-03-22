@@ -56,6 +56,7 @@ def save_json_report(run_result: RunResult, output_dir: str | Path) -> Path:
         "total_seconds": run_result.total_seconds,
         "aggregate_metrics": run_result.aggregate_metrics,
         "config": run_result.config,
+        "metadata": run_result.metadata,
     }
     summary_path = output_dir / "summary.json"
     with open(summary_path, "w", encoding="utf-8") as f:

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from mem_bench.adapters.bm25 import BM25Adapter
 from mem_bench.core.adapter import MemoryAdapter
-from mem_bench.core.types import IngestItem, RecallQuery
+from mem_bench.core.types import RecallQuery
 
 
 class TestBM25ProtocolCompliance:

@@ -56,11 +56,15 @@ class LangMemAdapter(BaseAdapter):
             return self._stores[namespace]
 
         try:
-            from langchain_core.vectorstores import InMemoryVectorStore  # type: ignore[import-untyped]
+            from langchain_core.vectorstores import (
+                InMemoryVectorStore,  # type: ignore[import-untyped]
+            )
             from langchain_openai import OpenAIEmbeddings  # type: ignore[import-untyped]
         except ImportError:
             try:
-                from langchain.vectorstores import InMemoryVectorStore  # type: ignore[import-untyped]
+                from langchain.vectorstores import (
+                    InMemoryVectorStore,  # type: ignore[import-untyped]
+                )
                 from langchain_openai import OpenAIEmbeddings  # type: ignore[import-untyped]
             except ImportError as exc:
                 raise ImportError(
@@ -107,18 +111,14 @@ class LangMemAdapter(BaseAdapter):
 
         store.add_texts(texts=texts, metadatas=metadatas, ids=ids)
 
-    def recall(
-        self, query: RecallQuery, *, namespace: str = "default"
-    ) -> list[RecallResult]:
+    def recall(self, query: RecallQuery, *, namespace: str = "default") -> list[RecallResult]:
         if namespace not in self._stores:
             return []
 
         store = self._get_store(namespace)
 
         try:
-            docs_and_scores = store.similarity_search_with_score(
-                query.query, k=query.top_k
-            )
+            docs_and_scores = store.similarity_search_with_score(query.query, k=query.top_k)
         except NotImplementedError:
             # Fallback: some stores only support plain similarity_search
             docs = store.similarity_search(query.query, k=query.top_k)

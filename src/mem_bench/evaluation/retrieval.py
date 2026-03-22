@@ -34,18 +34,13 @@ def _dcg(relevances: list[float], k: int) -> float:
     return total
 
 
-def _ndcg_at_k(
-    retrieved_ids: list[str], ground_truth_ids: set[str], k: int
-) -> float:
+def _ndcg_at_k(retrieved_ids: list[str], ground_truth_ids: set[str], k: int) -> float:
     """Normalized Discounted Cumulative Gain at *k*.
 
     Each retrieved document gets relevance 1 if it is in the ground truth,
     else 0.  The ideal ranking puts all relevant documents first.
     """
-    relevances = [
-        1.0 if doc_id in ground_truth_ids else 0.0
-        for doc_id in retrieved_ids[:k]
-    ]
+    relevances = [1.0 if doc_id in ground_truth_ids else 0.0 for doc_id in retrieved_ids[:k]]
     actual = _dcg(relevances, k)
 
     # Ideal: all relevant docs at the top

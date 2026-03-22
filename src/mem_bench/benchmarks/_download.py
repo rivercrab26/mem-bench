@@ -55,6 +55,7 @@ def download_benchmark(
                 local_path.symlink_to(downloaded)
             except OSError:
                 import shutil
+
                 shutil.copy2(downloaded, local_path)
         logger.info("Downloaded via huggingface_hub: %s", local_path)
         return local_path
@@ -62,9 +63,7 @@ def download_benchmark(
     except ImportError:
         logger.debug("huggingface_hub not installed, falling back to requests")
     except Exception as exc:
-        logger.warning(
-            "huggingface_hub download failed (%s), falling back to requests", exc
-        )
+        logger.warning("huggingface_hub download failed (%s), falling back to requests", exc)
 
     # Attempt 2: plain requests
     try:

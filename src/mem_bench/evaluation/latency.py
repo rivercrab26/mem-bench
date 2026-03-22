@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import statistics
+
 from mem_bench.core.types import SampleResult
 
 

@@ -10,8 +10,14 @@ from typing import Protocol, runtime_checkable
 class Judge(Protocol):
     """Interface for LLM-based answer evaluation."""
 
-    def evaluate(self, question: str, reference: str, hypothesis: str,
-                 question_type: str, is_abstention: bool = False) -> bool:
+    def evaluate(
+        self,
+        question: str,
+        reference: str,
+        hypothesis: str,
+        question_type: str,
+        is_abstention: bool = False,
+    ) -> bool:
         """Return True if the hypothesis is correct."""
         ...
 
@@ -71,9 +77,7 @@ class AnthropicJudge:
         try:
             import anthropic
         except ImportError:
-            raise ImportError(
-                "anthropic package required. Install with: pip install anthropic"
-            )
+            raise ImportError("anthropic package required. Install with: pip install anthropic")
 
         self.model = model
         key = api_key or os.environ.get(api_key_env, "")

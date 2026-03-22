@@ -17,6 +17,7 @@ def generate_answer(
     """Generate an answer using LLM with retrieved context."""
     try:
         import os
+
         from openai import OpenAI
     except ImportError:
         raise ImportError("openai package required. Install with: pip install mem-bench[judge]")

@@ -7,8 +7,11 @@ benchmark, collecting per-sample and aggregate results.
 from __future__ import annotations
 
 import logging
+import platform
+import sys
 import time
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from typing import Any
 
 from tqdm import tqdm
@@ -43,6 +46,7 @@ class RunResult:
     aggregate_metrics: dict[str, float] = field(default_factory=dict)
     total_seconds: float = 0.0
     config: dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class BenchmarkRunner:
@@ -103,7 +107,6 @@ class BenchmarkRunner:
             logger.debug("Warmup cleanup raised; ignoring.", exc_info=True)
 
         for sample in tqdm(samples, desc=f"Running {adapter_name}", unit="sample"):
-            last_exc: Exception | None = None
             succeeded = False
 
             for attempt in range(_MAX_RETRIES + 1):
@@ -112,8 +115,7 @@ class BenchmarkRunner:
                     sample_results.append(result)
                     succeeded = True
                     break
-                except Exception as exc:
-                    last_exc = exc
+                except Exception:
                     if attempt < _MAX_RETRIES:
                         logger.warning(
                             "Sample %s failed (attempt %d/%d), retrying",
@@ -145,6 +147,13 @@ class BenchmarkRunner:
 
         aggregate = self._aggregate_metrics(sample_results)
 
+        metadata = {
+            "python_version": sys.version,
+            "platform": platform.platform(),
+            "mem_bench_version": "0.1.0",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+
         return RunResult(
             benchmark_name=self.benchmark.name,
             split=self.config.split,
@@ -155,6 +164,7 @@ class BenchmarkRunner:
             aggregate_metrics=aggregate,
             total_seconds=total_seconds,
             config=self.config.model_dump(),
+            metadata=metadata,
         )
 
     # -- Private helpers ------------------------------------------------------
@@ -189,9 +199,7 @@ class BenchmarkRunner:
             metadata_filter=sample.metadata.get("metadata_filter"),
         )
         t0 = time.perf_counter()
-        recall_results: list[RecallResult] = self.adapter.recall(
-            query, namespace=namespace
-        )
+        recall_results: list[RecallResult] = self.adapter.recall(query, namespace=namespace)
         timing.recall_seconds = time.perf_counter() - t0
 
         # 4. Retrieval metrics
