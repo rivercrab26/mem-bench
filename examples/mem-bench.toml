@@ -1,0 +1,38 @@
+# mem-bench configuration example
+# Copy this file and customize for your setup
+
+[run]
+benchmark = "longmemeval"
+split = "oracle"              # "oracle" (evidence only), "s" (~115k tokens), "m" (~1.5M tokens)
+limit = 0                     # 0 = all samples, or set a number for quick testing
+output_dir = "./mem_bench_results"
+
+[adapter]
+name = "bm25"                 # "bm25", "mem0", "graphiti", "langmem", "letta", "hindsight"
+
+# Adapter-specific options
+[adapter.options]
+# For hindsight:
+# url = "http://localhost:9077"
+# budget = "high"
+# max_tokens = 4096
+
+# For mem0:
+# api_key_env = "MEM0_API_KEY"
+
+# For letta:
+# base_url = "http://localhost:8283"
+
+[judge]
+enabled = false               # Set to true for QA accuracy evaluation
+model = "gpt-4o-mini"
+provider = "openai"
+api_key_env = "OPENAI_API_KEY"
+
+[metrics]
+retrieval_k = [1, 3, 5, 10]
+include_latency = true
+include_cost = false
+
+[reporting]
+formats = ["console", "json"]  # "console", "json", "markdown"
