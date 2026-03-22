@@ -4,40 +4,18 @@ from __future__ import annotations
 
 import json
 import logging
-from collections import defaultdict
 from pathlib import Path
 
 from mem_bench.core.runner import RunResult
 from mem_bench.core.types import SampleResult
+from mem_bench.reporting._utils import (
+    _group_by_question_type,
+    _mean,
+    _metric_keys,
+    _qa_accuracy_for,
+)
 
 logger = logging.getLogger(__name__)
-
-
-def _mean(values: list[float]) -> float:
-    return sum(values) / len(values) if values else 0.0
-
-
-def _group_by_question_type(
-    samples: list[SampleResult],
-) -> dict[str, list[SampleResult]]:
-    groups: dict[str, list[SampleResult]] = defaultdict(list)
-    for s in samples:
-        groups[s.question_type].append(s)
-    return dict(groups)
-
-
-def _metric_keys(samples: list[SampleResult]) -> list[str]:
-    keys: set[str] = set()
-    for s in samples:
-        keys.update(s.retrieval_metrics.keys())
-    return sorted(keys)
-
-
-def _qa_accuracy_for(samples: list[SampleResult]) -> float | None:
-    scores = [s.qa_score for s in samples if s.qa_score is not None]
-    if not scores:
-        return None
-    return sum(1 for s in scores if s > 0.5) / len(scores)
 
 
 def _color_for_value(value: float) -> str:

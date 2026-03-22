@@ -21,9 +21,10 @@ class BM25Adapter(BaseAdapter):
         self._indices: dict[str, BM25Okapi] = {}
 
     def ingest(self, items: Sequence[IngestItem], *, namespace: str = "default") -> None:
-        item_list = list(items)
-        self._stores[namespace] = item_list
-        tokenized = [item.content.lower().split() for item in item_list]
+        existing = self._stores.get(namespace, [])
+        existing.extend(items)
+        self._stores[namespace] = existing
+        tokenized = [item.content.lower().split() for item in existing]
         self._indices[namespace] = BM25Okapi(tokenized)
 
     def recall(self, query: RecallQuery, *, namespace: str = "default") -> list[RecallResult]:

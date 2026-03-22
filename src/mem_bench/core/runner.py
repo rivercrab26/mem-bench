@@ -16,6 +16,7 @@ from typing import Any
 
 from tqdm import tqdm
 
+import mem_bench
 from mem_bench.core.adapter import MemoryAdapter
 from mem_bench.core.benchmark import Benchmark, BenchmarkSample
 from mem_bench.core.config import RunConfig
@@ -153,7 +154,7 @@ class BenchmarkRunner:
         metadata = {
             "python_version": sys.version,
             "platform": platform.platform(),
-            "mem_bench_version": "0.1.0",
+            "mem_bench_version": mem_bench.__version__,
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
@@ -205,6 +206,18 @@ class BenchmarkRunner:
         recall_results: list[RecallResult] = self.adapter.recall(query, namespace=namespace)
         timing.recall_seconds = time.perf_counter() - t0
 
+        # 3a. Ensure recall results are sorted by score descending.
+        if recall_results and any(
+            recall_results[i].score < recall_results[i + 1].score
+            for i in range(len(recall_results) - 1)
+        ):
+            logger.warning(
+                "Recall results for sample %s were not sorted by score descending; "
+                "sorting before computing metrics.",
+                sample.sample_id,
+            )
+            recall_results = sorted(recall_results, key=lambda r: r.score, reverse=True)
+
         # 4. Retrieval metrics
         retrieval_metrics = compute_retrieval_metrics(
             recall_results, sample.ground_truth_doc_ids, k_values=k_values
@@ -249,6 +262,7 @@ class BenchmarkRunner:
                 question_date=question_date,
                 model=self._gen_model or self.config.judge.model,
                 base_url=self.config.judge.base_url,
+                provider=self.config.judge.provider,
             )
             is_correct = self._judge.evaluate(
                 question=sample.question,

@@ -65,6 +65,11 @@ class GraphitiAdapter(BaseAdapter):
     entity extraction and graph construction. Ensure ``OPENAI_API_KEY`` is set
     in your environment or pass it via the ``openai_api_key`` parameter.
 
+    .. warning::
+        When ``openai_api_key`` is provided, the adapter sets the
+        ``OPENAI_API_KEY`` environment variable for the current process.
+        This is a process-wide side effect that may affect other components.
+
     Args:
         uri: Neo4j connection URI.  Defaults to ``NEO4J_URI`` env var or
              ``bolt://localhost:7687``.
@@ -84,6 +89,11 @@ class GraphitiAdapter(BaseAdapter):
     ) -> None:
         # Set OpenAI API key in env if provided explicitly.
         if openai_api_key:
+            logger.warning(
+                "Setting OPENAI_API_KEY environment variable for this process. "
+                "This is a process-wide side effect required by Graphiti's "
+                "internal OpenAI usage."
+            )
             os.environ["OPENAI_API_KEY"] = openai_api_key
 
         self._uri = uri or os.environ.get("NEO4J_URI", "bolt://localhost:7687")

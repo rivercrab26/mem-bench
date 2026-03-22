@@ -32,13 +32,14 @@ def _unique_doc_ids(results: Sequence[RecallResult]) -> list[str]:
 
 
 def _dcg(relevances: list[float], k: int) -> float:
-    """Discounted Cumulative Gain at *k*."""
+    """Discounted Cumulative Gain at *k*.
+
+    Uses the standard formula: rel_i / log2(i + 2) for 0-indexed positions,
+    which is equivalent to rel_i / log2(rank + 1) where rank starts at 1.
+    """
     total = 0.0
     for i, rel in enumerate(relevances[:k]):
-        if i == 0:
-            total += rel
-        else:
-            total += rel / math.log2(i + 1)  # position is 1-indexed: log2(i+1)
+        total += rel / math.log2(i + 2)
     return total
 
 
@@ -222,7 +223,7 @@ def compute_semantic_retrieval_metrics(
     question: str,
     reference_answer: str,
     ground_truth_contents: list[str],
-    k_values: list[int] = [1, 3, 5, 10],
+    k_values: list[int] | None = None,
     judge_model: str = "claude-haiku-4-5-20251001",
 ) -> dict[str, float]:
     """Compute semantic retrieval metrics using LLM judgement.
@@ -241,7 +242,7 @@ def compute_semantic_retrieval_metrics(
         reference_answer: The gold reference answer.
         ground_truth_contents: Actual text of the ground-truth sessions /
             documents that should be retrieved.
-        k_values: Cut-off values for the metrics.
+        k_values: Cut-off values for the metrics (default ``[1, 3, 5, 10]``).
         judge_model: LLM model identifier used for semantic judgement.
 
     Returns:
@@ -256,6 +257,9 @@ def compute_semantic_retrieval_metrics(
                 ...
             }
     """
+    if k_values is None:
+        k_values = [1, 3, 5, 10]
+
     metrics: dict[str, float] = {}
 
     for k in k_values:

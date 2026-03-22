@@ -57,6 +57,7 @@ class Mem0Adapter(BaseAdapter):
         self._llm_provider = llm_provider
         self._llm_model = llm_model
         self._client: Any = None  # lazy init
+        self._is_cloud: bool = bool(self._api_key)
 
     # ------------------------------------------------------------------
     # Lazy client initialization
@@ -183,9 +184,11 @@ class Mem0Adapter(BaseAdapter):
         except Exception:
             logger.warning("Mem0 cleanup failed for namespace=%s", namespace, exc_info=True)
         finally:
-            # Reset the Memory instance so it gets re-initialized fresh for
-            # the next namespace, avoiding stale collection state.
-            self._client = None
+            # Reset the local Memory instance so it gets re-initialized fresh
+            # for the next namespace, avoiding stale collection state.
+            # Cloud MemoryClient is stateless and does not need resetting.
+            if not self._is_cloud:
+                self._client = None
 
     # ------------------------------------------------------------------
     # Metadata

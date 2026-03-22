@@ -13,17 +13,20 @@ def generate_answer(
     model: str = "gpt-4o-mini",
     api_key: str | None = None,
     base_url: str | None = None,
+    provider: str = "openai",
 ) -> str:
-    """Generate an answer using LLM with retrieved context."""
-    try:
-        import os
+    """Generate an answer using LLM with retrieved context.
 
-        from openai import OpenAI
-    except ImportError:
-        raise ImportError("openai package required. Install with: pip install mem-bench[judge]")
-
-    key = api_key or os.environ.get("OPENAI_API_KEY", "")
-    client = OpenAI(api_key=key, base_url=base_url)
+    Args:
+        question: The question to answer.
+        context: Formatted recall context string.
+        question_date: Date string for temporal context.
+        model: LLM model identifier.
+        api_key: Optional API key override.
+        base_url: Optional base URL override.
+        provider: LLM provider, either ``"openai"`` or ``"anthropic"``.
+    """
+    import os
 
     system_msg = (
         "You are a helpful assistant with access to your memory of past conversations. "
@@ -39,16 +42,50 @@ def generate_answer(
         f"Answer:"
     )
 
-    response = client.chat.completions.create(
-        model=model,
-        messages=[
-            {"role": "system", "content": system_msg},
-            {"role": "user", "content": user_msg},
-        ],
-        max_tokens=500,
-        temperature=0,
-    )
-    return response.choices[0].message.content.strip()
+    if provider == "anthropic":
+        try:
+            import anthropic
+        except ImportError:
+            raise ImportError(
+                "anthropic package required. Install with: pip install mem-bench[anthropic]"
+            )
+
+        key = api_key or os.environ.get("ANTHROPIC_AUTH_TOKEN") or os.environ.get(
+            "ANTHROPIC_API_KEY", ""
+        )
+        kwargs: dict = {"api_key": key}
+        if base_url:
+            kwargs["base_url"] = base_url
+        client = anthropic.Anthropic(**kwargs)
+
+        msg = client.messages.create(
+            model=model,
+            max_tokens=500,
+            system=system_msg,
+            messages=[{"role": "user", "content": user_msg}],
+        )
+        return msg.content[0].text.strip()
+    else:
+        try:
+            from openai import OpenAI
+        except ImportError:
+            raise ImportError(
+                "openai package required. Install with: pip install mem-bench[judge]"
+            )
+
+        key = api_key or os.environ.get("OPENAI_API_KEY", "")
+        client = OpenAI(api_key=key, base_url=base_url)
+
+        response = client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": system_msg},
+                {"role": "user", "content": user_msg},
+            ],
+            max_tokens=500,
+            temperature=0,
+        )
+        return response.choices[0].message.content.strip()
 
 
 def format_recall_context(results: list[RecallResult]) -> str:

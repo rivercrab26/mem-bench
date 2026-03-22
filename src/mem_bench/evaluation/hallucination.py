@@ -6,9 +6,8 @@ Falls back to token-overlap matching when LLM is unavailable.
 
 from __future__ import annotations
 
-import os
-
 from mem_bench.core.types import RecallResult
+from mem_bench.evaluation.retrieval import _get_llm_client
 
 
 def compute_hallucination_metrics(
@@ -47,18 +46,38 @@ def compute_hallucination_metrics(
         return _fuzzy_hallucination_metrics(recall_results, ground_truth_contents)
 
 
+def _llm_yes_no(client, provider: str, prompt: str, model: str) -> bool:
+    """Ask an LLM a yes/no question. Returns True if the answer contains 'yes'."""
+    if provider == "anthropic":
+        msg = client.messages.create(
+            model=model,
+            max_tokens=5,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        text = msg.content[0].text.strip().lower()
+    else:
+        response = client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0,
+            max_tokens=5,
+        )
+        text = response.choices[0].message.content.strip().lower()
+
+    return "yes" in text
+
+
 def _llm_hallucination_metrics(
     results: list[RecallResult],
     gold: list[str],
     model: str,
 ) -> dict[str, float]:
-    """Use Anthropic LLM to check semantic equivalence."""
-    import anthropic
+    """Use LLM to check semantic equivalence.
 
-    client = anthropic.Anthropic(
-        api_key=os.environ.get("ANTHROPIC_AUTH_TOKEN", ""),
-        base_url=os.environ.get("ANTHROPIC_BASE_URL"),
-    )
+    Uses _get_llm_client() from retrieval.py which supports both Anthropic
+    and OpenAI-compatible providers.
+    """
+    client, provider = _get_llm_client()
 
     retrieved_texts = [r.content for r in results[:10]]
     retrieved_block = "\n---\n".join(retrieved_texts)
@@ -74,12 +93,7 @@ def _llm_hallucination_metrics(
             f"Retrieved memories:\n{retrieved_block}\n\n"
             "Answer yes or no only."
         )
-        msg = client.messages.create(
-            model=model,
-            max_tokens=5,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        if "yes" in msg.content[0].text.lower():
+        if _llm_yes_no(client, provider, prompt, model):
             gold_found += 1
 
     # Check accuracy: how many retrieved results match some gold memory
@@ -92,12 +106,7 @@ def _llm_hallucination_metrics(
             f"Reference facts:\n{gold_block}\n\n"
             "Answer yes or no only."
         )
-        msg = client.messages.create(
-            model=model,
-            max_tokens=5,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        if "yes" in msg.content[0].text.lower():
+        if _llm_yes_no(client, provider, prompt, model):
             accurate += 1
 
     n_gold = len(gold)

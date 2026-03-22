@@ -41,19 +41,6 @@ class MemoryAdapter(Protocol):
         ...
 
 
-@runtime_checkable
-class AsyncMemoryAdapter(Protocol):
-    """Async variant for memory systems with async APIs."""
-
-    async def ingest(self, items: Sequence[IngestItem], *, namespace: str = "default") -> None: ...
-
-    async def recall(
-        self, query: RecallQuery, *, namespace: str = "default"
-    ) -> list[RecallResult]: ...
-
-    async def cleanup(self, *, namespace: str = "default") -> None: ...
-
-
 class BaseAdapter:
     """Optional convenience base class. Protocol is sufficient; this is not required."""
 

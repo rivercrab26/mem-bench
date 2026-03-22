@@ -31,7 +31,7 @@ dependencies = [
 [project.optional-dependencies]
 mem0 = ["mem0ai"]
 graphiti = ["graphiti-core"]
-langchain = ["langchain", "langmem"]
+langmem = ["langchain", "langmem"]
 letta = ["letta"]
 judge = ["openai>=1.0"]
 anthropic = ["anthropic>=0.30"]

@@ -2,7 +2,7 @@
 
 __version__ = "0.1.0"
 
-from mem_bench.core.adapter import AsyncMemoryAdapter, BaseAdapter, MemoryAdapter
+from mem_bench.core.adapter import BaseAdapter, MemoryAdapter
 from mem_bench.core.benchmark import Benchmark, BenchmarkSample
 from mem_bench.core.types import IngestItem, RecallQuery, RecallResult
 
@@ -11,7 +11,6 @@ __all__ = [
     "RecallQuery",
     "RecallResult",
     "MemoryAdapter",
-    "AsyncMemoryAdapter",
     "BaseAdapter",
     "Benchmark",
     "BenchmarkSample",
