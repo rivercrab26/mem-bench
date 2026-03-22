@@ -8,7 +8,6 @@ import click
 
 from mem_bench.cli._benchmarks import get_benchmark
 
-
 # Map benchmark names to their known split names.
 # This avoids hardcoding imports and works for all registered benchmarks.
 _BENCHMARK_SPLITS: dict[str, list[str]] = {

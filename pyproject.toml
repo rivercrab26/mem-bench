@@ -53,6 +53,8 @@ hindsight = "mem_bench.adapters.hindsight:HindsightAdapter"
 longmemeval = "mem_bench.benchmarks.longmemeval:LongMemEvalBenchmark"
 locomo = "mem_bench.benchmarks.locomo:LoCoMoBenchmark"
 halumem = "mem_bench.benchmarks.halumem:HaluMemBenchmark"
+chinese = "mem_bench.benchmarks.chinese:ChineseMemBenchmark"
+continual = "mem_bench.benchmarks.continual:ContinualLearningBenchmark"
 
 [build-system]
 requires = ["hatchling"]
@@ -70,6 +72,8 @@ select = ["E", "F", "I", "W"]
 
 [tool.ruff.lint.per-file-ignores]
 "src/mem_bench/reporting/html_report.py" = ["E501"]
+"src/mem_bench/benchmarks/chinese.py" = ["E501"]
+"src/mem_bench/benchmarks/continual.py" = ["E501"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

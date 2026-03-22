@@ -25,6 +25,9 @@ class MetricsConfig(BaseModel):
     retrieval_k: list[int] = Field(default_factory=lambda: [1, 3, 5, 10])
     include_latency: bool = True
     include_cost: bool = False
+    compute_semantic: bool = False
+    semantic_retrieval_k: list[int] = Field(default_factory=lambda: [1, 3, 5, 10])
+    semantic_judge_model: str = "claude-haiku-4-5-20251001"
 
 
 class ReportingConfig(BaseModel):

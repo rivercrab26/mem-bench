@@ -26,7 +26,10 @@ from mem_bench.core.types import (
     TimingInfo,
 )
 from mem_bench.evaluation.qa import format_recall_context, generate_answer
-from mem_bench.evaluation.retrieval import compute_retrieval_metrics
+from mem_bench.evaluation.retrieval import (
+    compute_retrieval_metrics,
+    compute_semantic_retrieval_metrics,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -206,6 +209,32 @@ class BenchmarkRunner:
         retrieval_metrics = compute_retrieval_metrics(
             recall_results, sample.ground_truth_doc_ids, k_values=k_values
         )
+
+        # 4a. Semantic retrieval metrics (optional)
+        if self.config.metrics.compute_semantic:
+            # Build ground-truth contents from ingest items that match ground-truth doc IDs
+            gt_id_set = set(sample.ground_truth_doc_ids)
+            ground_truth_contents = [
+                item.content for item in sample.ingest_items if item.document_id in gt_id_set
+            ]
+            semantic_k = self.config.metrics.semantic_retrieval_k
+            judge_model = self.config.metrics.semantic_judge_model
+            try:
+                semantic_metrics = compute_semantic_retrieval_metrics(
+                    recall_results,
+                    question=sample.question,
+                    reference_answer=sample.reference_answer,
+                    ground_truth_contents=ground_truth_contents,
+                    k_values=semantic_k,
+                    judge_model=judge_model,
+                )
+                retrieval_metrics.update(semantic_metrics)
+            except Exception:
+                logger.warning(
+                    "Semantic metrics failed for sample %s, skipping",
+                    sample.sample_id,
+                    exc_info=True,
+                )
 
         # 4.5 QA generation + judge evaluation
         hypothesis = ""
