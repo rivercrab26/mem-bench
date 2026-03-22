@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Benchmark Report: Graphiti</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: system-ui, -apple-system, sans-serif; background: #f5f5f5; color: #333; padding: 24px; line-height: 1.5; }
+  .container { max-width: 960px; margin: 0 auto; }
+  h1 { font-size: 1.6rem; margin-bottom: 8px; color: #1a1a2e; }
+  h2 { font-size: 1.2rem; margin: 24px 0 12px 0; color: #16213e; border-bottom: 2px solid #ddd; padding-bottom: 4px; }
+  .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 16px 0; }
+  .summary-card { background: #fff; border-radius: 8px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .summary-card .label { font-size: 0.8rem; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
+  .summary-card .value { font-size: 1.3rem; font-weight: 600; color: #1a1a2e; margin-top: 4px; }
+  table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin: 12px 0; }
+  th { background: #1a1a2e; color: #fff; padding: 10px 12px; text-align: left; font-size: 0.85rem; font-weight: 600; }
+  th.num { text-align: right; }
+  td { padding: 8px 12px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+  td.num { text-align: right; font-family: 'SF Mono', 'Consolas', monospace; }
+  tr:last-child td { border-bottom: none; }
+  tr.overall td { font-weight: 700; background: #f0f4ff; }
+  .chart-container { background: #fff; border-radius: 8px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin: 12px 0; overflow-x: auto; }
+  pre { background: #1a1a2e; color: #e0e0e0; padding: 16px; border-radius: 8px; overflow-x: auto; font-size: 0.8rem; line-height: 1.6; }
+  .timing-table td, .timing-table th { font-size: 0.85rem; }
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Benchmark Report: Graphiti</h1>
+
+<div class="summary-grid">
+<div class="summary-card"><div class="label">Benchmark</div><div class="value">longmemeval</div></div>
+<div class="summary-card"><div class="label">Split</div><div class="value">oracle</div></div>
+<div class="summary-card"><div class="label">Samples</div><div class="value">5</div></div>
+<div class="summary-card"><div class="label">Failed</div><div class="value">5</div></div>
+<div class="summary-card"><div class="label">Total Time</div><div class="value">0.6s</div></div>
+<div class="summary-card"><div class="label">Version</div><div class="value">0.1.0</div></div>
+<div class="summary-card"><div class="label">Timestamp</div><div class="value">2026-03-22T06:57:08</div></div>
+</div>
+<h2>Timing Summary</h2>
+<table class="timing-table"><thead><tr><th>Metric</th><th class="num">Value (s)</th></tr></thead><tbody>
+<tr><td>mean_cleanup_seconds</td><td class="num">0.0000</td></tr>
+<tr><td>mean_ingest_seconds</td><td class="num">0.0000</td></tr>
+<tr><td>mean_recall_seconds</td><td class="num">0.0000</td></tr>
+<tr><td>total_cleanup_seconds</td><td class="num">0.0000</td></tr>
+<tr><td>total_ingest_seconds</td><td class="num">0.0000</td></tr>
+<tr><td>total_recall_seconds</td><td class="num">0.0000</td></tr>
+</tbody></table>
+<h2>Configuration</h2>
+<pre>{
+  &quot;benchmark&quot;: &quot;longmemeval&quot;,
+  &quot;split&quot;: &quot;oracle&quot;,
+  &quot;limit&quot;: 5,
+  &quot;output_dir&quot;: &quot;full_test_results/graphiti_oracle_5&quot;,
+  &quot;adapter&quot;: {
+    &quot;name&quot;: &quot;graphiti&quot;,
+    &quot;options&quot;: {}
+  },
+  &quot;judge&quot;: {
+    &quot;enabled&quot;: true,
+    &quot;model&quot;: &quot;openai/gpt-4o-mini&quot;,
+    &quot;provider&quot;: &quot;openai&quot;,
+    &quot;api_key_env&quot;: &quot;OPENAI_API_KEY&quot;,
+    &quot;base_url&quot;: &quot;https://openrouter.ai/api/v1&quot;
+  },
+  &quot;metrics&quot;: {
+    &quot;retrieval_k&quot;: [
+      1,
+      3,
+      5,
+      10
+    ],
+    &quot;include_latency&quot;: true,
+    &quot;include_cost&quot;: false
+  },
+  &quot;reporting&quot;: {
+    &quot;formats&quot;: [
+      &quot;console&quot;,
+      &quot;json&quot;,
+      &quot;markdown&quot;,
+      &quot;html&quot;
+    ]
+  }
+}</pre>
+<h2>Reproducibility Metadata</h2>
+<pre>{
+  &quot;python_version&quot;: &quot;3.11.15 (main, Mar  3 2026, 00:52:57) [Clang 17.0.0 (clang-1700.6.3.2)]&quot;,
+  &quot;platform&quot;: &quot;macOS-15.7.3-arm64-arm-64bit&quot;,
+  &quot;mem_bench_version&quot;: &quot;0.1.0&quot;,
+  &quot;timestamp&quot;: &quot;2026-03-22T06:57:08.820114+00:00&quot;
+}</pre>
+</div></body></html>

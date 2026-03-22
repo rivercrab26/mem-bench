@@ -9,6 +9,15 @@ import click
 from mem_bench.cli._benchmarks import get_benchmark
 
 
+# Map benchmark names to their known split names.
+# This avoids hardcoding imports and works for all registered benchmarks.
+_BENCHMARK_SPLITS: dict[str, list[str]] = {
+    "longmemeval": ["oracle", "s", "m"],
+    "halumem": ["medium", "long"],
+    "locomo": ["test"],
+}
+
+
 @click.command()
 @click.argument("benchmark_name")
 @click.option(
@@ -26,20 +35,21 @@ def download(benchmark_name: str, split: str | None) -> None:
         sys.exit(1)
 
     # Determine which splits to download.
-    # Benchmarks that expose a _SPLIT_FILES mapping allow downloading
-    # individual splits; otherwise we download the default split.
     splits_to_download: list[str]
     if split is not None:
         splits_to_download = [split]
     else:
-        # Try to get all known splits from the benchmark module.
-        from mem_bench.benchmarks import longmemeval as _lme
-
-        _split_map: dict[str, str] | None = getattr(_lme, "_SPLIT_FILES", None)
-        if benchmark_name == "longmemeval" and _split_map is not None:
-            splits_to_download = list(_split_map.keys())
+        # Look up known splits for this benchmark, or try to discover them
+        # from the benchmark module's _SPLIT_FILES attribute.
+        if benchmark_name in _BENCHMARK_SPLITS:
+            splits_to_download = _BENCHMARK_SPLITS[benchmark_name]
         else:
-            splits_to_download = ["oracle"]
+            # Fallback: try to find _SPLIT_FILES on the benchmark class.
+            split_files = getattr(type(bench), "_SPLIT_FILES", None)
+            if split_files and isinstance(split_files, dict):
+                splits_to_download = list(split_files.keys())
+            else:
+                splits_to_download = ["oracle"]
 
     for s in splits_to_download:
         click.echo(f"Downloading {benchmark_name} split={s} ...")

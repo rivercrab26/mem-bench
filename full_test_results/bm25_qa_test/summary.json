@@ -1,0 +1,71 @@
+{
+  "benchmark_name": "longmemeval",
+  "split": "oracle",
+  "adapter_name": "BM25",
+  "num_samples": 10,
+  "num_failed": 0,
+  "total_seconds": 42.090784792089835,
+  "aggregate_metrics": {
+    "mrr": 1.0,
+    "ndcg@1": 1.0,
+    "ndcg@10": 1.0,
+    "ndcg@3": 1.0,
+    "ndcg@5": 1.0,
+    "recall_all@1": 0.0,
+    "recall_all@10": 1.0,
+    "recall_all@3": 1.0,
+    "recall_all@5": 1.0,
+    "recall_any@1": 1.0,
+    "recall_any@10": 1.0,
+    "recall_any@3": 1.0,
+    "recall_any@5": 1.0,
+    "qa_accuracy": 0.8,
+    "mean_ingest_seconds": 0.002224649698473513,
+    "total_ingest_seconds": 0.02224649698473513,
+    "mean_recall_seconds": 0.00021258341148495675,
+    "total_recall_seconds": 0.0021258341148495674,
+    "mean_cleanup_seconds": 9.68000153079629e-05,
+    "total_cleanup_seconds": 0.0009680001530796289
+  },
+  "config": {
+    "benchmark": "longmemeval",
+    "split": "oracle",
+    "limit": 10,
+    "output_dir": "full_test_results/bm25_qa_test",
+    "adapter": {
+      "name": "bm25",
+      "options": {}
+    },
+    "judge": {
+      "enabled": true,
+      "model": "openai/gpt-4o-mini",
+      "provider": "openai",
+      "api_key_env": "OPENAI_API_KEY",
+      "base_url": "https://openrouter.ai/api/v1"
+    },
+    "metrics": {
+      "retrieval_k": [
+        1,
+        3,
+        5,
+        10
+      ],
+      "include_latency": true,
+      "include_cost": false
+    },
+    "reporting": {
+      "formats": [
+        "console",
+        "json",
+        "markdown",
+        "html"
+      ]
+    }
+  },
+  "metadata": {
+    "python_version": "3.11.15 (main, Mar  3 2026, 00:52:57) [Clang 17.0.0 (clang-1700.6.3.2)]",
+    "platform": "macOS-15.7.3-arm64-arm-64bit",
+    "mem_bench_version": "0.1.0",
+    "timestamp": "2026-03-22T06:56:02.741349+00:00"
+  }
+}
