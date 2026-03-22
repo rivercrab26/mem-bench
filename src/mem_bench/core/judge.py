@@ -17,7 +17,7 @@ class Judge(Protocol):
 
 
 class OpenAIJudge:
-    """Judge using OpenAI-compatible API (supports OpenAI, Anthropic via proxy, local)."""
+    """Judge using OpenAI-compatible API."""
 
     def __init__(
         self,
@@ -55,6 +55,51 @@ class OpenAIJudge:
             max_tokens=10,
         )
         text = response.choices[0].message.content.strip().lower()
+        return "yes" in text
+
+
+class AnthropicJudge:
+    """Judge using Anthropic's native API."""
+
+    def __init__(
+        self,
+        model: str = "claude-haiku-4-5-20251001",
+        api_key: str | None = None,
+        base_url: str | None = None,
+        api_key_env: str = "ANTHROPIC_AUTH_TOKEN",
+    ):
+        try:
+            import anthropic
+        except ImportError:
+            raise ImportError(
+                "anthropic package required. Install with: pip install anthropic"
+            )
+
+        self.model = model
+        key = api_key or os.environ.get(api_key_env, "")
+        kwargs = {"api_key": key}
+        if base_url:
+            kwargs["base_url"] = base_url
+        elif os.environ.get("ANTHROPIC_BASE_URL"):
+            kwargs["base_url"] = os.environ["ANTHROPIC_BASE_URL"]
+        self._client = anthropic.Anthropic(**kwargs)
+
+    def evaluate(
+        self,
+        question: str,
+        reference: str,
+        hypothesis: str,
+        question_type: str,
+        is_abstention: bool = False,
+    ) -> bool:
+        prompt = _build_judge_prompt(question_type, question, reference, hypothesis, is_abstention)
+
+        msg = self._client.messages.create(
+            model=self.model,
+            max_tokens=10,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        text = msg.content[0].text.strip().lower()
         return "yes" in text
 
 

@@ -1,0 +1,62 @@
+{
+  "benchmark_name": "longmemeval",
+  "split": "oracle",
+  "adapter_name": "BM25",
+  "num_samples": 20,
+  "num_failed": 0,
+  "total_seconds": 0.028683457989245653,
+  "aggregate_metrics": {
+    "mrr": 1.0,
+    "ndcg@1": 1.0,
+    "ndcg@10": 1.0,
+    "ndcg@3": 1.0,
+    "ndcg@5": 1.0,
+    "recall_all@1": 0.0,
+    "recall_all@10": 1.0,
+    "recall_all@3": 0.9,
+    "recall_all@5": 0.95,
+    "recall_any@1": 1.0,
+    "recall_any@10": 1.0,
+    "recall_any@3": 1.0,
+    "recall_any@5": 1.0,
+    "mean_ingest_seconds": 0.000921477226074785,
+    "total_ingest_seconds": 0.0184295445214957,
+    "mean_recall_seconds": 5.6068680714815854e-05,
+    "total_recall_seconds": 0.001121373614296317,
+    "mean_cleanup_seconds": 1.610203180462122e-05,
+    "total_cleanup_seconds": 0.0003220406360924244
+  },
+  "config": {
+    "benchmark": "longmemeval",
+    "split": "oracle",
+    "limit": 20,
+    "output_dir": "test_results/bm25",
+    "adapter": {
+      "name": "bm25",
+      "options": {}
+    },
+    "judge": {
+      "enabled": false,
+      "model": "gpt-4o-mini",
+      "provider": "openai",
+      "api_key_env": "OPENAI_API_KEY",
+      "base_url": null
+    },
+    "metrics": {
+      "retrieval_k": [
+        1,
+        3,
+        5,
+        10
+      ],
+      "include_latency": true,
+      "include_cost": false
+    },
+    "reporting": {
+      "formats": [
+        "console",
+        "json"
+      ]
+    }
+  }
+}

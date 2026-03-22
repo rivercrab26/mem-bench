@@ -36,12 +36,20 @@ class Mem0Adapter(BaseAdapter):
         base_url: str | None = None,
         org_id: str | None = None,
         project_id: str | None = None,
+        embedder_provider: str = "ollama",
+        embedder_model: str = "nomic-embed-text",
+        llm_provider: str = "ollama",
+        llm_model: str = "qwen3.5:latest",
         **kwargs: Any,
     ) -> None:
         self._api_key = api_key or os.environ.get("MEM0_API_KEY")
         self._base_url = base_url
         self._org_id = org_id
         self._project_id = project_id
+        self._embedder_provider = embedder_provider
+        self._embedder_model = embedder_model
+        self._llm_provider = llm_provider
+        self._llm_model = llm_model
         self._client: Any = None  # lazy init
 
     # ------------------------------------------------------------------
@@ -67,7 +75,20 @@ class Mem0Adapter(BaseAdapter):
             else:
                 from mem0 import Memory  # type: ignore[import-untyped]
 
-                self._client = Memory()
+                config: dict[str, Any] = {
+                    "embedder": {
+                        "provider": self._embedder_provider,
+                        "config": {"model": self._embedder_model},
+                    },
+                    "llm": {
+                        "provider": self._llm_provider,
+                        "config": {
+                            "model": self._llm_model,
+                            "temperature": 0,
+                        },
+                    },
+                }
+                self._client = Memory.from_config(config)
         except ImportError as exc:
             raise ImportError(
                 "mem0ai is not installed.  Install it with:\n"

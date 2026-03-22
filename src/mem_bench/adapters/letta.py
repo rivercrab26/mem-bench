@@ -96,13 +96,15 @@ class LettaAdapter(BaseAdapter):
 
         # Create a new agent
         resp = requests.post(
-            f"{self._base_url}/v1/agents",
+            f"{self._base_url}/v1/agents/",
             headers=self._headers(),
             json={
                 "name": agent_name,
+                "model": "letta/letta-free",
+                "embedding_model": "letta/letta-free",
                 "description": f"mem-bench evaluation agent for namespace '{namespace}'",
             },
-            timeout=30,
+            timeout=60,
         )
         resp.raise_for_status()
         agent_id = resp.json()["id"]
@@ -117,13 +119,14 @@ class LettaAdapter(BaseAdapter):
         agent_id = self._ensure_agent(namespace)
 
         for item in items:
-            text = item.content
+            # Embed document_id in the text so we can recover it during recall
+            text = f"[document_id:{item.document_id}]\n{item.content}"
             if item.timestamp:
                 text = f"[{item.timestamp}] {text}"
 
             try:
                 resp = requests.post(
-                    f"{self._base_url}/v1/agents/{agent_id}/archival",
+                    f"{self._base_url}/v1/agents/{agent_id}/archival-memory",
                     headers=self._headers(),
                     json={"text": text},
                     timeout=60,
@@ -146,7 +149,7 @@ class LettaAdapter(BaseAdapter):
 
         try:
             resp = requests.get(
-                f"{self._base_url}/v1/agents/{agent_id}/archival",
+                f"{self._base_url}/v1/agents/{agent_id}/archival-memory",
                 headers=self._headers(),
                 params={"query": query.query, "limit": query.top_k},
                 timeout=60,
@@ -163,15 +166,24 @@ class LettaAdapter(BaseAdapter):
         results: list[RecallResult] = []
         for i, passage in enumerate(passages):
             content = passage.get("text", "") or ""
-            passage_id = passage.get("id", f"passage-{i}")
             metadata = passage.get("metadata", {}) or {}
+
+            # Extract document_id from embedded tag
+            import re
+            doc_id_match = re.search(r"\[document_id:([^\]]+)\]", content)
+            if doc_id_match:
+                doc_id = doc_id_match.group(1)
+                # Strip the tag from content
+                content = re.sub(r"\[document_id:[^\]]+\]\n?", "", content)
+            else:
+                doc_id = passage.get("id", f"passage-{i}")
 
             # Use inverse rank as score proxy
             score = 1.0 / (i + 1)
 
             results.append(
                 RecallResult(
-                    document_id=str(passage_id),
+                    document_id=str(doc_id),
                     content=str(content),
                     score=score,
                     metadata=metadata,
