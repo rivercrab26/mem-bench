@@ -1,0 +1,78 @@
+{
+  "benchmark_name": "longmemeval",
+  "split": "oracle",
+  "adapter_name": "Supermemory",
+  "num_samples": 20,
+  "num_failed": 0,
+  "total_seconds": 349.5479645829182,
+  "aggregate_metrics": {
+    "mrr": 0.0,
+    "ndcg@1": 0.0,
+    "ndcg@10": 0.0,
+    "ndcg@3": 0.0,
+    "ndcg@5": 0.0,
+    "recall_all@1": 0.0,
+    "recall_all@10": 0.0,
+    "recall_all@3": 0.0,
+    "recall_all@5": 0.0,
+    "recall_any@1": 0.0,
+    "recall_any@10": 0.0,
+    "recall_any@3": 0.0,
+    "recall_any@5": 0.0,
+    "qa_accuracy": 0.05,
+    "mean_ingest_seconds": 10.30803314378718,
+    "total_ingest_seconds": 206.16066287574358,
+    "mean_recall_seconds": 1.7975328041007743,
+    "total_recall_seconds": 35.950656082015485,
+    "mean_cleanup_seconds": 2.703729145869147,
+    "total_cleanup_seconds": 54.07458291738294
+  },
+  "config": {
+    "benchmark": "longmemeval",
+    "split": "oracle",
+    "limit": 20,
+    "output_dir": "full_test_results/supermemory_oracle_20",
+    "adapter": {
+      "name": "supermemory",
+      "options": {}
+    },
+    "judge": {
+      "enabled": true,
+      "model": "openai/gpt-4o-mini",
+      "provider": "openai",
+      "api_key_env": "OPENAI_API_KEY",
+      "base_url": "https://openrouter.ai/api/v1"
+    },
+    "metrics": {
+      "retrieval_k": [
+        1,
+        3,
+        5,
+        10
+      ],
+      "include_latency": true,
+      "compute_semantic": false,
+      "semantic_retrieval_k": [
+        1,
+        3,
+        5,
+        10
+      ],
+      "semantic_judge_model": "claude-haiku-4-5-20251001"
+    },
+    "reporting": {
+      "formats": [
+        "console",
+        "json",
+        "markdown",
+        "html"
+      ]
+    }
+  },
+  "metadata": {
+    "python_version": "3.11.15 (main, Mar  3 2026, 00:52:57) [Clang 17.0.0 (clang-1700.6.3.2)]",
+    "platform": "macOS-15.7.3-arm64-arm-64bit",
+    "mem_bench_version": "0.1.0",
+    "timestamp": "2026-03-23T02:41:13.245735+00:00"
+  }
+}

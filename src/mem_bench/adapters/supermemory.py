@@ -40,7 +40,9 @@ class SupermemoryAdapter(BaseAdapter):
         api_key: str | None = None,
         base_url: str | None = None,
         search_mode: str = "hybrid",
-        ingest_wait: float = 2.0,
+        ingest_wait: float = 5.0,
+        poll_timeout: float = 120.0,
+        poll_interval: float = 3.0,
         **kwargs: Any,
     ) -> None:
         self._api_key = api_key or os.environ.get("SUPERMEMORY_API_KEY", "")
@@ -52,6 +54,8 @@ class SupermemoryAdapter(BaseAdapter):
         self._base_url = (base_url or _DEFAULT_BASE_URL).rstrip("/")
         self._search_mode = search_mode
         self._ingest_wait = ingest_wait
+        self._poll_timeout = poll_timeout
+        self._poll_interval = poll_interval
 
     def _headers(self) -> dict[str, str]:
         return {
@@ -62,6 +66,7 @@ class SupermemoryAdapter(BaseAdapter):
     def ingest(
         self, items: Sequence[IngestItem], *, namespace: str = "default"
     ) -> None:
+        doc_ids: list[str] = []
         for item in items:
             payload: dict[str, Any] = {
                 "content": item.content,
@@ -85,6 +90,7 @@ class SupermemoryAdapter(BaseAdapter):
                     timeout=30,
                 )
                 resp.raise_for_status()
+                doc_ids.append(resp.json().get("id", ""))
             except Exception:
                 logger.exception(
                     "Supermemory ingest failed for document_id=%s",
@@ -92,9 +98,43 @@ class SupermemoryAdapter(BaseAdapter):
                 )
                 raise
 
-        # Wait for async processing (supermemory processes documents asynchronously)
-        if self._ingest_wait > 0:
-            time.sleep(self._ingest_wait)
+        # Poll until all documents are processed
+        self._wait_for_processing(doc_ids)
+
+    def _wait_for_processing(self, doc_ids: list[str]) -> None:
+        """Poll document status until all are 'done' or timeout."""
+        if not doc_ids:
+            return
+        pending = set(doc_ids)
+        deadline = time.time() + self._poll_timeout
+        time.sleep(self._ingest_wait)  # Initial wait
+
+        while pending and time.time() < deadline:
+            still_pending = set()
+            for doc_id in pending:
+                if not doc_id:
+                    continue
+                try:
+                    resp = requests.get(
+                        f"{self._base_url}/v3/documents/{doc_id}",
+                        headers=self._headers(),
+                        timeout=10,
+                    )
+                    status = resp.json().get("status", "unknown")
+                    if status != "done":
+                        still_pending.add(doc_id)
+                except Exception:
+                    still_pending.add(doc_id)
+            pending = still_pending
+            if pending:
+                time.sleep(self._poll_interval)
+
+        if pending:
+            logger.warning(
+                "Supermemory: %d documents still processing after %.0fs timeout",
+                len(pending),
+                self._poll_timeout,
+            )
 
     def recall(
         self, query: RecallQuery, *, namespace: str = "default"
