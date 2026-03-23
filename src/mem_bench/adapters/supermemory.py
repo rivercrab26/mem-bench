@@ -66,21 +66,18 @@ class SupermemoryAdapter(BaseAdapter):
     def ingest(
         self, items: Sequence[IngestItem], *, namespace: str = "default"
     ) -> None:
+        # Batch small items into larger documents to reduce API calls.
+        # Supermemory processes each document async (~30-60s), so fewer
+        # documents = much faster total processing.
+        batches = self._batch_items(list(items), max_chars=8000)
+
         doc_ids: list[str] = []
-        for item in items:
+        for batch_id, batch_content in batches:
             payload: dict[str, Any] = {
-                "content": item.content,
-                "customId": item.document_id,
+                "content": batch_content,
+                "customId": batch_id,
                 "containerTags": [namespace],
             }
-            if item.metadata:
-                # Supermemory metadata only supports strings, numbers, booleans
-                safe_meta = {}
-                for k, v in item.metadata.items():
-                    if isinstance(v, (str, int, float, bool)):
-                        safe_meta[k] = v
-                if safe_meta:
-                    payload["metadata"] = safe_meta
 
             try:
                 resp = requests.post(
@@ -93,13 +90,51 @@ class SupermemoryAdapter(BaseAdapter):
                 doc_ids.append(resp.json().get("id", ""))
             except Exception:
                 logger.exception(
-                    "Supermemory ingest failed for document_id=%s",
-                    item.document_id,
+                    "Supermemory ingest failed for batch=%s", batch_id
                 )
                 raise
 
         # Poll until all documents are processed
         self._wait_for_processing(doc_ids)
+
+    @staticmethod
+    def _batch_items(
+        items: list[IngestItem], max_chars: int = 8000
+    ) -> list[tuple[str, str]]:
+        """Merge small items into batches to reduce API calls.
+
+        Returns list of (batch_id, combined_content) tuples.
+        """
+        if not items:
+            return []
+
+        batches: list[tuple[str, str]] = []
+        current_parts: list[str] = []
+        current_ids: list[str] = []
+        current_len = 0
+
+        for item in items:
+            item_text = f"[Session: {item.document_id}]\n{item.content}"
+            if current_len + len(item_text) > max_chars and current_parts:
+                batch_id = "_".join(current_ids[:3])
+                if len(current_ids) > 3:
+                    batch_id += f"_+{len(current_ids) - 3}"
+                batches.append((batch_id, "\n\n---\n\n".join(current_parts)))
+                current_parts = []
+                current_ids = []
+                current_len = 0
+
+            current_parts.append(item_text)
+            current_ids.append(item.document_id)
+            current_len += len(item_text)
+
+        if current_parts:
+            batch_id = "_".join(current_ids[:3])
+            if len(current_ids) > 3:
+                batch_id += f"_+{len(current_ids) - 3}"
+            batches.append((batch_id, "\n\n---\n\n".join(current_parts)))
+
+        return batches
 
     def _wait_for_processing(self, doc_ids: list[str]) -> None:
         """Poll document status until all are 'done' or timeout."""
