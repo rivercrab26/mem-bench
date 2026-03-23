@@ -9,10 +9,12 @@ from pathlib import Path
 from mem_bench.core.runner import RunResult
 from mem_bench.core.types import SampleResult
 from mem_bench.reporting._utils import (
+    _FACT_EXTRACTION_NOTE,
     _group_by_question_type,
     _mean,
     _metric_keys,
     _qa_accuracy_for,
+    detect_fact_extraction_mode,
 )
 
 logger = logging.getLogger(__name__)
@@ -169,6 +171,10 @@ def save_html_report(run_result: RunResult, output_dir: str | Path) -> Path:
     for label, value in cards:
         html_parts.append(f'<div class="summary-card"><div class="label">{_escape_html(label)}</div><div class="value">{_escape_html(value)}</div></div>')
     html_parts.append('</div>')
+
+    # --- Fact-extraction note ---
+    if detect_fact_extraction_mode(run_result.sample_results):
+        html_parts.append(f'<div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:12px 16px;margin:16px 0;"><strong>NOTE:</strong> {_escape_html(_FACT_EXTRACTION_NOTE)}</div>')
 
     # --- Metrics table ---
     if column_keys:

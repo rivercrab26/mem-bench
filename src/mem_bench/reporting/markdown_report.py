@@ -7,10 +7,12 @@ from pathlib import Path
 
 from mem_bench.core.runner import RunResult
 from mem_bench.reporting._utils import (
+    _FACT_EXTRACTION_NOTE,
     _group_by_question_type,
     _mean,
     _metric_keys,
     _qa_accuracy_for,
+    detect_fact_extraction_mode,
 )
 
 logger = logging.getLogger(__name__)
@@ -47,6 +49,11 @@ def save_markdown_report(run_result: RunResult, output_dir: str | Path) -> Path:
     groups = _group_by_question_type(run_result.sample_results)
     all_keys = _metric_keys(run_result.sample_results)
     has_qa = any(s.qa_score is not None for s in run_result.sample_results)
+
+    is_fact_extraction = detect_fact_extraction_mode(run_result.sample_results)
+    if is_fact_extraction:
+        lines.append(f"> **NOTE:** {_FACT_EXTRACTION_NOTE}")
+        lines.append("")
 
     if all_keys or has_qa:
         lines.append("## Metrics by Question Type")

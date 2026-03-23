@@ -9,7 +9,13 @@ from rich.table import Table
 
 from mem_bench.core.runner import RunResult
 from mem_bench.core.types import SampleResult
-from mem_bench.reporting._utils import _group_by_question_type, _mean, _qa_accuracy_for
+from mem_bench.reporting._utils import (
+    _FACT_EXTRACTION_NOTE,
+    _group_by_question_type,
+    _mean,
+    _qa_accuracy_for,
+    detect_fact_extraction_mode,
+)
 
 # Key metrics to display (avoids truncation from too many columns).
 _DISPLAY_METRICS = [
@@ -50,6 +56,12 @@ def print_results(run_result: RunResult) -> None:
         f"Time: {run_result.total_seconds:.1f}s"
     )
     console.print()
+
+    # -- Fact-extraction detection --------------------------------------------
+    is_fact_extraction = detect_fact_extraction_mode(run_result.sample_results)
+    if is_fact_extraction:
+        console.print(f"[bold yellow]NOTE:[/bold yellow] {_FACT_EXTRACTION_NOTE}")
+        console.print()
 
     # -- Per-question-type table ----------------------------------------------
     groups = _group_by_question_type(run_result.sample_results)

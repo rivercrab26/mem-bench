@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from mem_bench.core.runner import RunResult
+from mem_bench.reporting._utils import _FACT_EXTRACTION_NOTE, detect_fact_extraction_mode
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +59,9 @@ def save_json_report(run_result: RunResult, output_dir: str | Path) -> Path:
         "config": run_result.config,
         "metadata": run_result.metadata,
     }
+    if detect_fact_extraction_mode(run_result.sample_results):
+        summary["fact_extraction_mode"] = True
+        summary["fact_extraction_note"] = _FACT_EXTRACTION_NOTE
     summary_path = output_dir / "summary.json"
     with open(summary_path, "w", encoding="utf-8") as f:
         json.dump(summary, f, indent=2, default=str, ensure_ascii=False)
