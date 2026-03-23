@@ -35,7 +35,8 @@ langmem = ["langchain", "langmem"]
 letta = ["letta"]
 judge = ["openai>=1.0"]
 anthropic = ["anthropic>=0.30"]
-all = ["mem0ai", "graphiti-core", "langchain", "langmem", "letta", "openai>=1.0", "anthropic>=0.30"]
+supermemory = ["supermemory"]
+all = ["mem0ai", "graphiti-core", "langchain", "langmem", "letta", "openai>=1.0", "anthropic>=0.30", "supermemory"]
 dev = ["pytest>=8.0", "ruff>=0.4", "pyright>=1.1"]
 
 [project.scripts]
@@ -48,6 +49,7 @@ graphiti = "mem_bench.adapters.graphiti:GraphitiAdapter"
 langmem = "mem_bench.adapters.langmem:LangMemAdapter"
 letta = "mem_bench.adapters.letta:LettaAdapter"
 hindsight = "mem_bench.adapters.hindsight:HindsightAdapter"
+supermemory = "mem_bench.adapters.supermemory:SupermemoryAdapter"
 
 [project.entry-points."mem_bench.benchmarks"]
 longmemeval = "mem_bench.benchmarks.longmemeval:LongMemEvalBenchmark"

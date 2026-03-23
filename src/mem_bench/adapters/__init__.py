@@ -13,6 +13,7 @@ _BUILTIN_ADAPTERS: dict[str, str] = {
     "graphiti": "mem_bench.adapters.graphiti:GraphitiAdapter",
     "langmem": "mem_bench.adapters.langmem:LangMemAdapter",
     "letta": "mem_bench.adapters.letta:LettaAdapter",
+    "supermemory": "mem_bench.adapters.supermemory:SupermemoryAdapter",
     "hindsight": "mem_bench.adapters.hindsight:HindsightAdapter",
 }
 
